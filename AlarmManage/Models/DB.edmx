@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="alarm_manage_systemModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="alarm_origin">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="tag_id" Type="int" />
+          <Property Name="alarm_value" Type="nvarchar" MaxLength="50" />
+          <Property Name="time" Type="datetime" />
+          <Property Name="state" Type="int" />
+        </EntityType>
+        <EntityType Name="mes_tag">
+          <Key>
+            <PropertyRef Name="mes_id" />
+          </Key>
+          <Property Name="mes_id" Type="int" Nullable="false" />
+          <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
+          <Property Name="mes_tag" Type="nvarchar" MaxLength="255" />
+        </EntityType>
+        <EntityType Name="tag_info">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
+          <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
+        </EntityType>
+        <!--生成过程中发现错误:
+警告 6002: 表/视图“alarm_manage_system.dbo.alarm_origin_view”未定义主键。已推断出该键，并将定义创建为只读的表/视图。-->
+        <EntityType Name="alarm_origin_view">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" />
+          <Property Name="tag_id" Type="int" />
+          <Property Name="alarm_value" Type="nvarchar" MaxLength="50" />
+          <Property Name="time" Type="datetime" />
+          <Property Name="state" Type="int" />
+          <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
+          <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
+        </EntityType>
+        <!--生成过程中发现错误:
+警告 6002: 表/视图“alarm_manage_system.dbo.tag_info_view”未定义主键。已推断出该键，并将定义创建为只读的表/视图。-->
+        <EntityType Name="tag_info_view">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" />
+          <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
+          <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
+          <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
+        </EntityType>
+        <EntityContainer Name="alarm_manage_systemModelStoreContainer">
+          <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="mes_tag" EntityType="Self.mes_tag" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tag_info" EntityType="Self.tag_info" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="alarm_origin_view" EntityType="Self.alarm_origin_view" store:Type="Views" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [alarm_origin_view].[id] AS [id], 
+    [alarm_origin_view].[tag_id] AS [tag_id], 
+    [alarm_origin_view].[alarm_value] AS [alarm_value], 
+    [alarm_origin_view].[time] AS [time], 
+    [alarm_origin_view].[state] AS [state], 
+    [alarm_origin_view].[tag_discription] AS [tag_discription], 
+    [alarm_origin_view].[tag_name] AS [tag_name]
+    FROM [dbo].[alarm_origin_view] AS [alarm_origin_view]</DefiningQuery>
+          </EntitySet>
+          <EntitySet Name="tag_info_view" EntityType="Self.tag_info_view" store:Type="Views" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [tag_info_view].[id] AS [id], 
+    [tag_info_view].[tag_name] AS [tag_name], 
+    [tag_info_view].[tag_discription] AS [tag_discription], 
+    [tag_info_view].[mes_tag_name] AS [mes_tag_name]
+    FROM [dbo].[tag_info_view] AS [tag_info_view]</DefiningQuery>
+          </EntitySet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="alarm_manage_systemModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="alarm_origin">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="tag_id" Type="Int32" />
+          <Property Name="alarm_value" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="time" Type="DateTime" Precision="3" />
+          <Property Name="state" Type="Int32" />
+        </EntityType>
+        <EntityType Name="mes_tag">
+          <Key>
+            <PropertyRef Name="mes_id" />
+          </Key>
+          <Property Name="mes_id" Type="Int32" Nullable="false" />
+          <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="mes_tag1" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="tag_info">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="alarm_origin_view">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" />
+          <Property Name="tag_id" Type="Int32" />
+          <Property Name="alarm_value" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="time" Type="DateTime" Precision="3" />
+          <Property Name="state" Type="Int32" />
+          <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="tag_info_view">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" />
+          <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityContainer Name="alarm_manage_systemEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" />
+          <EntitySet Name="mes_tag" EntityType="Self.mes_tag" />
+          <EntitySet Name="tag_info" EntityType="Self.tag_info" />
+          <EntitySet Name="alarm_origin_view" EntityType="Self.alarm_origin_view" />
+          <EntitySet Name="tag_info_view" EntityType="Self.tag_info_view" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="alarm_manage_systemModelStoreContainer" CdmEntityContainer="alarm_manage_systemEntities">
+          <EntitySetMapping Name="alarm_origin">
+            <EntityTypeMapping TypeName="alarm_manage_systemModel.alarm_origin">
+              <MappingFragment StoreEntitySet="alarm_origin">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="tag_id" ColumnName="tag_id" />
+                <ScalarProperty Name="alarm_value" ColumnName="alarm_value" />
+                <ScalarProperty Name="time" ColumnName="time" />
+                <ScalarProperty Name="state" ColumnName="state" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="mes_tag">
+            <EntityTypeMapping TypeName="alarm_manage_systemModel.mes_tag">
+              <MappingFragment StoreEntitySet="mes_tag">
+                <ScalarProperty Name="mes_id" ColumnName="mes_id" />
+                <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
+                <ScalarProperty Name="mes_tag1" ColumnName="mes_tag" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tag_info">
+            <EntityTypeMapping TypeName="alarm_manage_systemModel.tag_info">
+              <MappingFragment StoreEntitySet="tag_info">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="tag_name" ColumnName="tag_name" />
+                <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="alarm_origin_view">
+            <EntityTypeMapping TypeName="alarm_manage_systemModel.alarm_origin_view">
+              <MappingFragment StoreEntitySet="alarm_origin_view">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="tag_id" ColumnName="tag_id" />
+                <ScalarProperty Name="alarm_value" ColumnName="alarm_value" />
+                <ScalarProperty Name="time" ColumnName="time" />
+                <ScalarProperty Name="state" ColumnName="state" />
+                <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
+                <ScalarProperty Name="tag_name" ColumnName="tag_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tag_info_view">
+            <EntityTypeMapping TypeName="alarm_manage_systemModel.tag_info_view">
+              <MappingFragment StoreEntitySet="tag_info_view">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="tag_name" ColumnName="tag_name" />
+                <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
+                <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="无" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
