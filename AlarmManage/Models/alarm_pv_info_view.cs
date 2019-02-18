@@ -12,7 +12,7 @@ namespace AlarmManage.Models
     using System;
     using System.Collections.Generic;
     
-    public partial class alarm_origin_view
+    public partial class alarm_pv_info_view
     {
         public int id { get; set; }
         public Nullable<int> tag_id { get; set; }
@@ -27,5 +27,7 @@ namespace AlarmManage.Models
         public string LL { get; set; }
         public string PH { get; set; }
         public string PL { get; set; }
+        public string every_pv { get; set; }
+        public Nullable<System.DateTime> time_pv { get; set; }
     }
 }

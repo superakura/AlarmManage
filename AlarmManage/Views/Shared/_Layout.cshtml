@@ -7,12 +7,24 @@
     <title>报警信息管理</title>
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
     <link href="~/dist/bootstrap-table.min.css" rel="stylesheet" />
+    <link href="~/Content/toastr.min.css" rel="stylesheet" />
+    <style>
+        .toast-center-center {
+            top: 50%;
+            left: 50%;
+            margin-top: -25px;
+            margin-left: -150px;
+        }
+    </style>
 </head>
 <body>
     <script src="~/Scripts/jquery-1.11.3.min.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script src="~/dist/bootstrap-table.min.js"></script>
     <script src="~/dist/locale/bootstrap-table-zh-CN.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Scripts/toastr.min.js"></script>
     <!--[if lt IE 9]>
         <script src="~/Scripts/html5shiv.js"></script>
         <script src="~/Scripts/respond.min.js"></script>
@@ -26,6 +38,24 @@
         </footer>
     </div>
     <script>
+        //toastr提示控件设置
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toast-center-center",
+            "preventDuplicates": true,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "2000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
         //json日期时间格式化
         function getJsonDateTime(jsonDate) {
             if (jsonDate !== null) {
@@ -36,6 +66,11 @@
             else {
                 return "";
             }
+        }
+
+        //日期比较，返回true、false
+        function CompareDate(d1, d2) {
+            return ((new Date(d1.replace(/-/g, "\/"))) <= (new Date(d2.replace(/-/g, "\/"))));
         }
     </script>
 </body>

@@ -12,20 +12,14 @@ namespace AlarmManage.Models
     using System;
     using System.Collections.Generic;
     
-    public partial class alarm_origin_view
+    public partial class alarm_info
     {
         public int id { get; set; }
-        public Nullable<int> tag_id { get; set; }
-        public string alarm_value { get; set; }
-        public Nullable<System.DateTime> time { get; set; }
-        public Nullable<int> state { get; set; }
-        public string tag_discription { get; set; }
-        public string tag_name { get; set; }
-        public string mes_tag_name { get; set; }
-        public string pv { get; set; }
+        public Nullable<int> alarm_id { get; set; }
         public string HH { get; set; }
         public string LL { get; set; }
         public string PH { get; set; }
         public string PL { get; set; }
+        public string PV { get; set; }
     }
 }
