@@ -1,0 +1,278 @@
+﻿
+@{
+    ViewBag.Title = "HistoryList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="panel panel-primary">
+    <div class="panel-heading">二套聚丙烯历史报警信息</div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="tbxTagNameSearch">位号：</label>
+                        <input type="text" id="tbxTagNameSearch" class="form-control" placeholder="位号">
+                    </div>
+                    <div class="form-group">
+                        <label for="tbxAlarmTimeBeginSearch">报警时间范围：</label>
+                        <input type="text" class="form-control" id="tbxAlarmTimeBeginSearch" placeholder="报警时间范围开始">--
+                        <input type="text" class="form-control" id="tbxAlarmTimeEndSearch" placeholder="报警时间范围结束">
+                    </div>
+                    <div class="form-group">
+                        <label for="ddlTeamSearch">班次：</label>
+                        <select id="ddlTeamSearch" class="form-control">
+                            <option value="">全部</option>
+                            <option value="一班">一班</option>
+                            <option value="二班">二班</option>
+                            <option value="三班">三班</option>
+                            <option value="四班">四班</option>
+                            <option value="五班">五班</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnSearch" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-search"></span> 查询
+                    </button>
+                    <button type="button" id="btnReset" class="btn bg-navy">
+                        <span class="glyphicon glyphicon-repeat"></span> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+        <table id="bsTable"></table>
+        <table id="bsTableFrequency"></table>
+    </div>
+</div>
+<script>
+    $(function () {
+        var queryParams = function (params) {
+            var temp = {   //这里的键的名字和控制器的变量名必须一直，这边改动，控制器也需要改成一样的
+                tbxTagNameSearch: $("#tbxTagNameSearch").val(),//位号
+                tbxAlarmTimeBeginSearch: $("#tbxAlarmTimeBeginSearch").val(),//报警时间范围开始
+                tbxAlarmTimeEndSearch: $("#tbxAlarmTimeEndSearch").val(),//报警时间范围结束
+                ddlTeamSearch: $("#ddlTeamSearch").val(),//班次
+                limit: params.limit,   //页面大小
+                offset: params.offset //页码
+            };
+            return temp;
+        };
+        var columns = [
+            [
+                {
+                    title: '报警详细信息',
+                    rowspan: 1,
+                    colspan: 10,
+                    valign: "middle",
+                    align: "center"
+                }
+            ],
+            [
+                {
+                    field: 'TagName',
+                    title: '报警位号',
+                    formatter: function (value, row, index) {
+                        return row.TagName.substring(0, row.TagName.length - 5);
+                    }
+                },
+                {
+                    field: 'AlarmValue',
+                    title: '报警信息'
+                },
+                {
+                    field: 'PV',
+                    title: 'PV'
+                },
+                {
+                    field: 'HH',
+                    title: 'HH'
+                },
+                {
+                    field: 'LL',
+                    title: 'LL'
+                },
+                {
+                    field: 'PH',
+                    title: 'PH'
+                },
+                {
+                    field: 'PL',
+                    title: 'PL'
+                },
+                {
+                    field: 'AlarmTime',
+                    title: '时间',
+                    formatter: function (value, row, index) {
+                        return ChangeDateFormat(row.AlarmTime);
+                    }
+                },
+                {
+                    field: 'TagDiscriptionCN',
+                    title: '中文描述'
+                },
+                {
+                    field: 'TagDiscriptionEN',
+                    title: '英文描述',
+                    visible: false
+                }
+            ]
+        ];
+        $('#bsTable').bootstrapTable({
+            url: '/AlarmInfo/GetList',         //请求后台的URL（*）
+            contentType: 'application/x-www-form-urlencoded',
+            method: 'post',                     //请求方式（*）
+            toolbar: '#toolbar',                //工具按钮用哪个容器
+            striped: true,                      //是否显示行间隔色
+            cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+            pagination: true,                   //是否显示分页（*）
+            sortable: false,                     //是否启用排序
+            sortOrder: "asc",                   //排序方式
+            queryParams: queryParams,//传递参数（*）
+            sidePagination: "server",           //分页方式：client客户端分页，server服务端分页（*）
+            pageNumber: 1,                       //初始化加载第一页，默认第一页
+            pageSize: 10,                       //每页的记录行数（*）
+            pageList: [10, 15, 20, 25],        //可供选择的每页的行数（*）
+            search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+            strictSearch: true,
+            showColumns: true,                  //是否显示所有的列
+            showRefresh: true,                  //是否显示刷新按钮
+            minimumCountColumns: 2,             //最少允许的列数
+            clickToSelect: false,                //是否启用点击选中行
+            //height: 600,                        //行高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+            uniqueId: "ID",                     //每一行的唯一标识，一般为主键列
+            showToggle: false,                    //是否显示详细视图和列表视图的切换按钮
+            cardView: false,                    //是否显示详细视图
+            detailView: false,                   //是否显示父子表
+            paginationPreText: "上一页",
+            paginationNextText: "下一页",
+            showExport: false,                     //是否显示导出
+            //formatLoadingMessage: function () {
+            //    return "";
+            //},
+            columns: columns
+        });
+
+        //加载日期选择框
+        $("#tbxAlarmTimeBeginSearch,#tbxAlarmTimeEndSearch").datetimepicker({
+            language: 'zh-CN',
+            weekStart: 1,
+            todayBtn: 1,
+            autoclose: 1,
+            todayHighlight: 1,
+            startView: 2,
+            minView: 2,
+            forceParse: 0,
+            format: 'yyyy-mm-dd'
+        });
+
+        var columnsFrequency = [
+            [
+                {
+                    title: '报警频次信息',
+                    rowspan: 1,
+                    colspan: 5,
+                    valign: "middle",
+                    align: "center"
+                }
+            ],
+            [
+                {
+                    field: 'TagName',
+                    title: '报警位号',
+                    formatter: function (value, row, index) {
+                        return row.TagName.substring(0, row.TagName.length - 5);
+                    }
+                },
+                {
+                    field: 'AlarmValue',
+                    title: '报警信息'
+                },
+                {
+                    field: 'AlarmFrequency',
+                    title: '次数'
+                },
+                {
+                    field: 'TagDiscriptionCN',
+                    title: '中文描述'
+                },
+                {
+                    field: 'TagDiscriptionEN',
+                    title: '英文描述',
+                    visible: false
+                }
+            ]
+        ];
+        $('#bsTableFrequency').bootstrapTable({
+            url: '/AlarmInfo/GetListFrequency',         //请求后台的URL（*）
+            contentType: 'application/x-www-form-urlencoded',
+            method: 'post',                     //请求方式（*）
+            toolbar: '#toolbar',                //工具按钮用哪个容器
+            striped: true,                      //是否显示行间隔色
+            cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+            pagination: true,                   //是否显示分页（*）
+            sortable: false,                     //是否启用排序
+            sortOrder: "asc",                   //排序方式
+            queryParams: queryParams,//传递参数（*）
+            sidePagination: "server",           //分页方式：client客户端分页，server服务端分页（*）
+            pageNumber: 1,                       //初始化加载第一页，默认第一页
+            pageSize: 10,                       //每页的记录行数（*）
+            pageList: [10, 15, 20, 25],        //可供选择的每页的行数（*）
+            search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+            strictSearch: true,
+            showColumns: true,                  //是否显示所有的列
+            showRefresh: true,                  //是否显示刷新按钮
+            minimumCountColumns: 2,             //最少允许的列数
+            clickToSelect: false,                //是否启用点击选中行
+            //height: 600,                        //行高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+            uniqueId: "ID",                     //每一行的唯一标识，一般为主键列
+            showToggle: false,                    //是否显示详细视图和列表视图的切换按钮
+            cardView: false,                    //是否显示详细视图
+            detailView: false,                   //是否显示父子表
+            paginationPreText: "上一页",
+            paginationNextText: "下一页",
+            showExport: false,                     //是否显示导出
+            columns: columnsFrequency
+        });
+
+        //搜索按钮
+        $("#btnSearch").click(function () {
+            var inputTimeStart = $("#tbxAlarmTimeBeginSearch").val();
+            var inputTimeEnd = $("#tbxAlarmTimeEndSearch").val();
+            var ddlTeamSearch = $("#ddlTeamSearch").val()
+
+            if (ddlTeamSearch !== "") {
+                if (inputTimeStart === "" || inputTimeEnd === "") {
+                    toastr.error("查询班次，必须选择日期范围，日期范围不能大于31天！", "提示");
+                    return false;
+                }
+                var startD = new Date(Date.parse(inputTimeStart.replace(/-/g, "/")));
+                var endD = new Date(Date.parse(inputTimeEnd.replace(/-/g, "/")));
+                var days = parseInt((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
+                if (days > 31) {
+                    toastr.error("查询班次，必须选择日期范围，日期范围不能大于31天！", "提示");
+                    return false;
+                }
+            }
+
+            if (inputTimeStart != "" || inputTimeEnd != "") {
+                if (CompareDate(inputTimeStart, inputTimeEnd)) {
+                    $("#bsTable,#bsTableFrequency").bootstrapTable('refresh');
+                }
+                else {
+                    toastr.error("日期范围必须填写完整，结束日期必须大于开始日期！", "提示");
+                    $("#tbxAlarmTimeBeginSearch,#tbxAlarmTimeEndSearch").val("");
+                    return false;
+                }
+            }
+            else {
+                $("#bsTable,#bsTableFrequency").bootstrapTable('refresh');
+            }
+        });
+
+        //重置按钮
+        $("#btnReset").click(function () {
+            $("#tbxTagNameSearch,#tbxAlarmTimeBeginSearch,#tbxAlarmTimeEndSearch,#ddlTeamSearch").val("");
+            $("#bsTable,#bsTableFrequency").bootstrapTable('refresh');
+        });
+    });
+</script>
+
