@@ -19,5 +19,7 @@ namespace AlarmManage.Models
         public string alarm_value { get; set; }
         public Nullable<System.DateTime> time { get; set; }
         public Nullable<int> state { get; set; }
+        public Nullable<System.DateTime> start_time { get; set; }
+        public Nullable<System.DateTime> end_time { get; set; }
     }
 }

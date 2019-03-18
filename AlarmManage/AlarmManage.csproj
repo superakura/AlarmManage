@@ -45,6 +45,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Aspose.Cells">
+      <HintPath>..\..\源代码&amp;控件&amp;开发库\Aspose.Cells.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -446,6 +449,7 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\AlarmInfo\List.cshtml" />
     <Content Include="Views\AlarmInfo\HistoryList.cshtml" />
+    <Content Include="Views\AlarmInfo\FrequencyList.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

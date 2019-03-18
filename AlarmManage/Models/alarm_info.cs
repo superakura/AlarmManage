@@ -21,5 +21,7 @@ namespace AlarmManage.Models
         public string PH { get; set; }
         public string PL { get; set; }
         public string PV { get; set; }
+        public Nullable<System.DateTime> start_time { get; set; }
+        public Nullable<System.DateTime> end_time { get; set; }
     }
 }

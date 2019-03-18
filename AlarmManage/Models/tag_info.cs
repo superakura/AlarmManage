@@ -17,5 +17,7 @@ namespace AlarmManage.Models
         public int id { get; set; }
         public string tag_name { get; set; }
         public string tag_discription { get; set; }
+        public Nullable<int> tag_level { get; set; }
+        public string type { get; set; }
     }
 }

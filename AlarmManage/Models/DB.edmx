@@ -16,6 +16,8 @@
           <Property Name="PH" Type="nvarchar" MaxLength="50" />
           <Property Name="PL" Type="nvarchar" MaxLength="50" />
           <Property Name="PV" Type="nvarchar" MaxLength="50" />
+          <Property Name="start_time" Type="datetime" />
+          <Property Name="end_time" Type="datetime" />
         </EntityType>
         <EntityType Name="alarm_origin">
           <Key>
@@ -26,6 +28,8 @@
           <Property Name="alarm_value" Type="nvarchar" MaxLength="50" />
           <Property Name="time" Type="datetime" />
           <Property Name="state" Type="int" />
+          <Property Name="start_time" Type="datetime" />
+          <Property Name="end_time" Type="datetime" />
         </EntityType>
         <EntityType Name="alarm_pv_value">
           <Key>
@@ -51,6 +55,8 @@
           <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
           <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
+          <Property Name="tag_level" Type="int" />
+          <Property Name="type" Type="nvarchar" MaxLength="200" />
         </EntityType>
         <!--生成过程中发现错误:
 警告 6002: 表/视图“alarm_manage_system.dbo.alarm_origin_view”未定义主键。已推断出该键，并将定义创建为只读的表/视图。-->
@@ -63,6 +69,8 @@
           <Property Name="alarm_value" Type="nvarchar" MaxLength="50" />
           <Property Name="time" Type="datetime" />
           <Property Name="state" Type="int" />
+          <Property Name="start_time" Type="datetime" />
+          <Property Name="end_time" Type="datetime" />
           <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
           <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
           <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
@@ -103,6 +111,8 @@
           <Property Name="id" Type="int" Nullable="false" />
           <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
           <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
+          <Property Name="tag_level" Type="int" />
+          <Property Name="type" Type="nvarchar" MaxLength="200" />
           <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
         </EntityType>
         <EntityContainer Name="alarm_manage_systemModelStoreContainer">
@@ -118,6 +128,8 @@
     [alarm_origin_view].[alarm_value] AS [alarm_value], 
     [alarm_origin_view].[time] AS [time], 
     [alarm_origin_view].[state] AS [state], 
+    [alarm_origin_view].[start_time] AS [start_time], 
+    [alarm_origin_view].[end_time] AS [end_time], 
     [alarm_origin_view].[tag_discription] AS [tag_discription], 
     [alarm_origin_view].[tag_name] AS [tag_name], 
     [alarm_origin_view].[mes_tag_name] AS [mes_tag_name], 
@@ -152,6 +164,8 @@
     [tag_info_view].[id] AS [id], 
     [tag_info_view].[tag_name] AS [tag_name], 
     [tag_info_view].[tag_discription] AS [tag_discription], 
+    [tag_info_view].[tag_level] AS [tag_level], 
+    [tag_info_view].[type] AS [type], 
     [tag_info_view].[mes_tag_name] AS [mes_tag_name]
     FROM [dbo].[tag_info_view] AS [tag_info_view]</DefiningQuery>
           </EntitySet>
@@ -172,6 +186,8 @@
           <Property Name="PH" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PL" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PV" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="start_time" Type="DateTime" Precision="3" />
+          <Property Name="end_time" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="alarm_origin">
           <Key>
@@ -182,6 +198,8 @@
           <Property Name="alarm_value" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="time" Type="DateTime" Precision="3" />
           <Property Name="state" Type="Int32" />
+          <Property Name="start_time" Type="DateTime" Precision="3" />
+          <Property Name="end_time" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="alarm_pv_value">
           <Key>
@@ -207,6 +225,8 @@
           <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="tag_level" Type="Int32" />
+          <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="alarm_origin_view">
           <Key>
@@ -217,6 +237,8 @@
           <Property Name="alarm_value" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="time" Type="DateTime" Precision="3" />
           <Property Name="state" Type="Int32" />
+          <Property Name="start_time" Type="DateTime" Precision="3" />
+          <Property Name="end_time" Type="DateTime" Precision="3" />
           <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
           <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
@@ -253,9 +275,11 @@
           <Property Name="id" Type="Int32" Nullable="false" />
           <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="tag_level" Type="Int32" />
+          <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
-        <EntityContainer Name="alarm_manage_systemEntities" annotation:LazyLoadingEnabled="true">
+        <EntityContainer Name="alarm_manage_systemEntities1" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="alarm_info" EntityType="Self.alarm_info" />
           <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" />
           <EntitySet Name="alarm_pv_value" EntityType="Self.alarm_pv_value" />
@@ -270,7 +294,7 @@
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
-        <EntityContainerMapping StorageEntityContainer="alarm_manage_systemModelStoreContainer" CdmEntityContainer="alarm_manage_systemEntities">
+        <EntityContainerMapping StorageEntityContainer="alarm_manage_systemModelStoreContainer" CdmEntityContainer="alarm_manage_systemEntities1">
           <EntitySetMapping Name="alarm_info">
             <EntityTypeMapping TypeName="alarm_manage_systemModel.alarm_info">
               <MappingFragment StoreEntitySet="alarm_info">
@@ -281,6 +305,8 @@
                 <ScalarProperty Name="PH" ColumnName="PH" />
                 <ScalarProperty Name="PL" ColumnName="PL" />
                 <ScalarProperty Name="PV" ColumnName="PV" />
+                <ScalarProperty Name="start_time" ColumnName="start_time" />
+                <ScalarProperty Name="end_time" ColumnName="end_time" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -292,6 +318,8 @@
                 <ScalarProperty Name="alarm_value" ColumnName="alarm_value" />
                 <ScalarProperty Name="time" ColumnName="time" />
                 <ScalarProperty Name="state" ColumnName="state" />
+                <ScalarProperty Name="start_time" ColumnName="start_time" />
+                <ScalarProperty Name="end_time" ColumnName="end_time" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -320,6 +348,8 @@
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="tag_name" ColumnName="tag_name" />
                 <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
+                <ScalarProperty Name="tag_level" ColumnName="tag_level" />
+                <ScalarProperty Name="type" ColumnName="type" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -331,6 +361,8 @@
                 <ScalarProperty Name="alarm_value" ColumnName="alarm_value" />
                 <ScalarProperty Name="time" ColumnName="time" />
                 <ScalarProperty Name="state" ColumnName="state" />
+                <ScalarProperty Name="start_time" ColumnName="start_time" />
+                <ScalarProperty Name="end_time" ColumnName="end_time" />
                 <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
                 <ScalarProperty Name="tag_name" ColumnName="tag_name" />
                 <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
@@ -369,6 +401,8 @@
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="tag_name" ColumnName="tag_name" />
                 <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
+                <ScalarProperty Name="tag_level" ColumnName="tag_level" />
+                <ScalarProperty Name="type" ColumnName="type" />
                 <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
               </MappingFragment>
             </EntityTypeMapping>

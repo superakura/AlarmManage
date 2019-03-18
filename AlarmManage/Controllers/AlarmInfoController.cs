@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Aspose.Cells;
+using System.Data.Entity;
 
 namespace AlarmManage.Controllers
 {
     public class AlarmInfoController : Controller
     {
         private Models.alarm_manage_systemEntities db = new Models.alarm_manage_systemEntities();
+
         // GET: AlarmInfo
+
         public ActionResult List()
         {
             return View();
@@ -20,7 +24,11 @@ namespace AlarmManage.Controllers
             return View();
         }
 
-        #region 获取某段日期范围内的所有日期
+        public ViewResult FrequencyList()
+        {
+            return View();
+        }
+
         /// <summary> 
         /// 获取某段日期范围内的所有日期，以数组形式返回  
         /// </summary>  
@@ -37,7 +45,6 @@ namespace AlarmManage.Controllers
             }
             return listDays.ToArray();
         }
-        #endregion
 
         /// <summary>
         /// 实时报警列表
@@ -551,7 +558,7 @@ namespace AlarmManage.Controllers
                 {
                     var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
                     var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-                    result = result.Where(w => System.Data.Entity.DbFunctions.DiffDays(w.AlarmTime, dateStart) <= 0 && System.Data.Entity.DbFunctions.DiffMinutes(w.AlarmTime, dateEnd) >= 0);
+                    result = result.Where(w => System.Data.Entity.DbFunctions.DiffDays(w.AlarmTime, dateStart) <= 0 && System.Data.Entity.DbFunctions.DiffDays(w.AlarmTime, dateEnd) >= 0);
                 }
 
                 //选择班组
@@ -958,7 +965,6 @@ namespace AlarmManage.Controllers
                                     TagDiscriptionEN = g.Key.TagDiscriptionEN,
                                     AlarmFrequency = g.Count()
                                 };
-
                 return Json(new { total = frequency.Count(), rows = frequency.OrderByDescending(o => o.AlarmFrequency).ThenByDescending(t => t.TagName).Skip(offset).Take(limit).ToList() });
             }
             catch (Exception e)
@@ -968,18 +974,66 @@ namespace AlarmManage.Controllers
         }
 
         /// <summary>
-        /// 班组报警频次统计
+        /// 返回时间范围秒数
+        /// </summary>
+        /// <param name="dateBegin">开始时间</param>
+        /// <param name="dateEnd">结束时间</param>
+        /// <returns>返回(秒)单位，比如: 0.00239秒</returns>
+        public static double ExecDateDiff(DateTime dateBegin, DateTime dateEnd)
+        {
+            TimeSpan ts1 = new TimeSpan(dateBegin.Ticks);
+            TimeSpan ts2 = new TimeSpan(dateEnd.Ticks);
+            TimeSpan ts3 = ts1.Subtract(ts2).Duration();
+            //你想转的格式
+            return ts3.TotalSeconds;
+        }
+
+        /// <summary>
+        /// 报警率计算
         /// </summary>
         /// <returns></returns>
-        public JsonResult GetListTeamStatistic()
+        public JsonResult TimeFrequencyStatistic()
         {
             try
             {
-                return Json("");
+                var limit = 0;
+                int.TryParse(Request.Form["limit"], out limit);
+                var offset = 0;
+                int.TryParse(Request.Form["offset"], out offset);
+
+                var tbxTagNameSearch = Request.Form["tbxTagNameSearch"];//位号
+                var tbxAlarmTimeBeginSearch = Request.Form["tbxAlarmTimeBeginSearch"];//报警时间范围开始
+                var tbxAlarmTimeEndSearch = Request.Form["tbxAlarmTimeEndSearch"];//报警时间范围结束
+
+                var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch+" 00:00:00");
+                var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch+" 23:59:59");
+
+                var secondRange = ExecDateDiff(dateStart,dateEnd);
+
+                var frequency = from p in db.alarm_origin_view
+                                where p.alarm_value != "NR" && DbFunctions.DiffSeconds(p.time, dateStart) <= 0 && DbFunctions.DiffSeconds(p.time, dateEnd) >= 0
+                                group p by new { p.tag_name,p.mes_tag_name,p.tag_discription } into g
+                                select new
+                                {
+                                    TagName = g.Key.tag_name,
+                                    TagDiscriptionCN = g.Key.mes_tag_name,
+                                    TagDiscriptionEN = g.Key.tag_discription,
+                                    TimeFrequency =g.Sum(s=> DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)),
+                                    Rate= (g.Sum(s => DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0 ? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)) / secondRange),
+                                    Range=secondRange
+                                };
+                if (tbxTagNameSearch != string.Empty)
+                {
+                    frequency = frequency.Where(w => w.TagName.Contains(tbxTagNameSearch));
+                }
+
+                return Json(new { total = frequency.Count(),
+                    rows = frequency.OrderByDescending(o => o.Rate).Skip(offset).Take(limit).ToList()
+                });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return Json(e.Message);
+                return Json(ex.Message);
             }
         }
     }

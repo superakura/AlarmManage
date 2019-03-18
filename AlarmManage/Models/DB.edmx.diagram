@@ -4,15 +4,15 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="a8a9a6a2a08b442c9828322df6dfc456" Name="Diagram1">
+      <Diagram DiagramId="269ef579e0824c938af86b76b1fcbfcc" Name="Diagram1">
         <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_info" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_origin" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_pv_value" Width="1.5" PointX="2.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.mes_tag" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.tag_info" Width="1.5" PointX="4.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_origin_view" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_pv_info_view" Width="1.5" PointX="0.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="alarm_manage_systemModel.tag_info_view" Width="1.5" PointX="2.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_pv_value" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.mes_tag" Width="1.5" PointX="0.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.tag_info" Width="1.5" PointX="2.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_origin_view" Width="1.5" PointX="4.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_pv_info_view" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="alarm_manage_systemModel.tag_info_view" Width="1.5" PointX="6.75" PointY="5.75" IsExpanded="true" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
