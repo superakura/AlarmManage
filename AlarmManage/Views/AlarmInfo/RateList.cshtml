@@ -26,27 +26,25 @@
                         <span class="glyphicon glyphicon-repeat"></span> 重置
                     </button>
                     @*<button type="button" id="btnExcel" class="btn btn-danger">
-                        <span class="glyphicon glyphicon-export"></span> 导出
-                    </button>*@
+                            <span class="glyphicon glyphicon-export"></span> 导出
+                        </button>*@
                 </div>
             </div>
         </div>
-        <table id="bsTableFrequency"></table>
+        <table id="bsTableRate"></table>
     </div>
 </div>
 <script>
-    //加载日期选择框
-    $("#tbxAlarmTimeBeginSearch,#tbxAlarmTimeEndSearch").datetimepicker({
-        language: 'zh-CN',
-        weekStart: 1,
-        todayBtn: 1,
-        autoclose: 1,
-        todayHighlight: 1,
-        startView: 2,
-        minView: 2,
-        forceParse: 0,
-        format: 'yyyy-mm-dd'
+    laydate.render({
+        elem: '#tbxAlarmTimeBeginSearch'
+        , type: 'datetime'
     });
+
+    laydate.render({
+        elem: '#tbxAlarmTimeEndSearch'
+        , type: 'datetime'
+    });
+
     var nowDate = new Date();
     var pre7Date = new Date(nowDate.getTime() - 7 * 24 * 60 * 60 * 1000); //前7天
 
@@ -67,11 +65,12 @@
         return currentdate;
     }
 
-    //$("#tbxAlarmTimeBeginSearch").val(getNowFormatDate(pre7Date));
-    //$("#tbxAlarmTimeEndSearch").val(getNowFormatDate(nowDate));
-
-    $("#tbxAlarmTimeBeginSearch").val("2019-03-11");
-    $("#tbxAlarmTimeEndSearch").val("2019-03-13");
+    //设置默认时间范围
+    setDateTime();
+    function setDateTime() {
+        $("#tbxAlarmTimeBeginSearch").val(getNowFormatDate(pre7Date) + " 00:00:00");
+        $("#tbxAlarmTimeEndSearch").val(getNowFormatDate(nowDate) + " 23:59:59");
+    }
 
     $(function () {
         var queryParams = function (params) {
@@ -85,12 +84,12 @@
             return temp;
         };
 
-        var columnsFrequency = [
+        var columns = [
             [
                 {
                     title: '报警率信息',
                     rowspan: 1,
-                    colspan: 6,
+                    colspan: 8,
                     valign: "middle",
                     align: "center"
                 }
@@ -104,6 +103,10 @@
                     }
                 },
                 {
+                    field: 'Type',
+                    title: '类型'
+                },
+                {
                     field: 'TimeFrequency',
                     title: '报警时长（秒）'
                 },
@@ -115,7 +118,7 @@
                     field: 'Rate',
                     title: '报警率',
                     formatter: function (value, row, index) {
-                        return row.Rate*100;
+                        return row.Rate * 100;
                     }
                 },
                 {
@@ -126,11 +129,16 @@
                     field: 'TagDiscriptionEN',
                     title: '英文描述',
                     visible: false
+                },
+                {
+                    field: 'TagLevel',
+                    title: '报警等级',
+                    visible: false
                 }
             ]
         ];
-        $('#bsTableFrequency').bootstrapTable({
-            url: '/AlarmInfo/TimeFrequencyStatistic',         //请求后台的URL（*）
+        $('#bsTableRate').bootstrapTable({
+            url: '/AlarmInfo/GetListRate',         //请求后台的URL（*）
             contentType: 'application/x-www-form-urlencoded',
             method: 'post',                     //请求方式（*）
             toolbar: '#toolbar',                //工具按钮用哪个容器
@@ -158,53 +166,40 @@
             paginationPreText: "上一页",
             paginationNextText: "下一页",
             showExport: false,                     //是否显示导出
-            columns: columnsFrequency
+            columns: columns
         });
 
         //计算按钮
         $("#btnSearch").click(function () {
             var inputTimeStart = $("#tbxAlarmTimeBeginSearch").val();
             var inputTimeEnd = $("#tbxAlarmTimeEndSearch").val();
-            var ddlTeamSearch = $("#ddlTeamSearch").val()
 
-            if (ddlTeamSearch !== "") {
-                if (inputTimeStart === "" || inputTimeEnd === "") {
-                    toastr.error("查询班次，必须选择日期范围，日期范围不能大于31天！", "提示");
-                    return false;
-                }
-                var startD = new Date(Date.parse(inputTimeStart.replace(/-/g, "/")));
-                var endD = new Date(Date.parse(inputTimeEnd.replace(/-/g, "/")));
-                var days = parseInt((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
-                if (days > 31) {
-                    toastr.error("查询班次，必须选择日期范围，日期范围不能大于31天！", "提示");
-                    return false;
-                }
+            if (inputTimeStart === "" || inputTimeEnd === "") {
+                toastr.error("日期范围必须填写完整，范围不能大于31天！", "提示");
+                return false;
             }
 
-            if (inputTimeStart != "" || inputTimeEnd != "") {
-                if (CompareDate(inputTimeStart, inputTimeEnd)) {
-                    $("#bsTableFrequency").bootstrapTable('refresh');
-                }
-                else {
-                    toastr.error("日期范围必须填写完整，结束日期必须大于开始日期！", "提示");
-                    $("#tbxAlarmTimeBeginSearch,#tbxAlarmTimeEndSearch").val("");
-                    return false;
-                }
+            var startD = new Date(Date.parse(inputTimeStart.replace(/-/g, "/")));
+            var endD = new Date(Date.parse(inputTimeEnd.replace(/-/g, "/")));
+            var days = parseInt((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
+            if (days > 31) {
+                toastr.error("日期范围必须填写完整，日期范围不能大于31天！", "提示");
+                return false;
+            }
+
+            if (CompareDate(inputTimeStart, inputTimeEnd)) {
+                $("#bsTableRate").bootstrapTable('refresh');
             }
             else {
-                $("#bsTableFrequency").bootstrapTable('refresh');
+                toastr.error("日期范围必须填写完整，结束日期必须大于开始日期！", "提示");
+                return false;
             }
         });
 
         //重置按钮
         $("#btnReset").click(function () {
-            $("#tbxTagNameSearch").val("");
-            var nowDate = new Date();
-            var pre7Date = new Date(nowDate.getTime() - 7 * 24 * 60 * 60 * 1000); //前7天
-            $("#tbxAlarmTimeBeginSearch").val(getNowFormatDate(pre7Date));
-            $("#tbxAlarmTimeEndSearch").val(getNowFormatDate(nowDate));
-
-            $("#bsTable,#bsTableFrequency").bootstrapTable('refresh');
+            setDateTime();
+            $("#bsTableRate").bootstrapTable('refresh');
         });
     });
 </script>

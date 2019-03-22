@@ -74,11 +74,13 @@
           <Property Name="tag_discription" Type="nvarchar" MaxLength="200" />
           <Property Name="tag_name" Type="nvarchar" MaxLength="100" />
           <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
-          <Property Name="pv" Type="nvarchar" MaxLength="50" />
+          <Property Name="PV" Type="nvarchar" MaxLength="50" />
           <Property Name="HH" Type="nvarchar" MaxLength="50" />
           <Property Name="LL" Type="nvarchar" MaxLength="50" />
           <Property Name="PH" Type="nvarchar" MaxLength="50" />
           <Property Name="PL" Type="nvarchar" MaxLength="50" />
+          <Property Name="tag_level" Type="int" />
+          <Property Name="type" Type="nvarchar" MaxLength="200" />
         </EntityType>
         <!--生成过程中发现错误:
 警告 6002: 表/视图“alarm_manage_system.dbo.alarm_pv_info_view”未定义主键。已推断出该键，并将定义创建为只读的表/视图。-->
@@ -133,11 +135,13 @@
     [alarm_origin_view].[tag_discription] AS [tag_discription], 
     [alarm_origin_view].[tag_name] AS [tag_name], 
     [alarm_origin_view].[mes_tag_name] AS [mes_tag_name], 
-    [alarm_origin_view].[pv] AS [pv], 
+    [alarm_origin_view].[PV] AS [PV], 
     [alarm_origin_view].[HH] AS [HH], 
     [alarm_origin_view].[LL] AS [LL], 
     [alarm_origin_view].[PH] AS [PH], 
-    [alarm_origin_view].[PL] AS [PL]
+    [alarm_origin_view].[PL] AS [PL], 
+    [alarm_origin_view].[tag_level] AS [tag_level], 
+    [alarm_origin_view].[type] AS [type]
     FROM [dbo].[alarm_origin_view] AS [alarm_origin_view]</DefiningQuery>
           </EntitySet>
           <EntitySet Name="alarm_pv_info_view" EntityType="Self.alarm_pv_info_view" store:Type="Views" store:Schema="dbo">
@@ -242,11 +246,13 @@
           <Property Name="tag_discription" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
           <Property Name="tag_name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
-          <Property Name="pv" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="PV" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="HH" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="LL" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PH" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PL" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="tag_level" Type="Int32" />
+          <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="alarm_pv_info_view">
           <Key>
@@ -279,7 +285,7 @@
           <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
-        <EntityContainer Name="alarm_manage_systemEntities1" annotation:LazyLoadingEnabled="true">
+        <EntityContainer Name="alarm_manage_systemEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="alarm_info" EntityType="Self.alarm_info" />
           <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" />
           <EntitySet Name="alarm_pv_value" EntityType="Self.alarm_pv_value" />
@@ -294,7 +300,7 @@
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
-        <EntityContainerMapping StorageEntityContainer="alarm_manage_systemModelStoreContainer" CdmEntityContainer="alarm_manage_systemEntities1">
+        <EntityContainerMapping StorageEntityContainer="alarm_manage_systemModelStoreContainer" CdmEntityContainer="alarm_manage_systemEntities">
           <EntitySetMapping Name="alarm_info">
             <EntityTypeMapping TypeName="alarm_manage_systemModel.alarm_info">
               <MappingFragment StoreEntitySet="alarm_info">
@@ -366,11 +372,13 @@
                 <ScalarProperty Name="tag_discription" ColumnName="tag_discription" />
                 <ScalarProperty Name="tag_name" ColumnName="tag_name" />
                 <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
-                <ScalarProperty Name="pv" ColumnName="pv" />
+                <ScalarProperty Name="PV" ColumnName="PV" />
                 <ScalarProperty Name="HH" ColumnName="HH" />
                 <ScalarProperty Name="LL" ColumnName="LL" />
                 <ScalarProperty Name="PH" ColumnName="PH" />
                 <ScalarProperty Name="PL" ColumnName="PL" />
+                <ScalarProperty Name="tag_level" ColumnName="tag_level" />
+                <ScalarProperty Name="type" ColumnName="type" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

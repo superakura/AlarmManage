@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="269ef579e0824c938af86b76b1fcbfcc" Name="Diagram1">
+      <Diagram DiagramId="b8a475dc31f9400cbf713366b517df8c" Name="Diagram1">
         <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_info" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_origin" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="alarm_manage_systemModel.alarm_pv_value" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />

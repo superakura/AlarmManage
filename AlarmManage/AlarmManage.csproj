@@ -389,6 +389,9 @@
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="laydate\laydate.js" />
+    <Content Include="laydate\theme\default\font\iconfont.svg" />
+    <Content Include="laydate\theme\default\laydate.css" />
     <Content Include="Models\DB.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <DependentUpon>DB.edmx</DependentUpon>
@@ -404,6 +407,9 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\jquery-1.11.3.min.map" />
+    <Content Include="laydate\theme\default\font\iconfont.eot" />
+    <Content Include="laydate\theme\default\font\iconfont.ttf" />
+    <Content Include="laydate\theme\default\font\iconfont.woff" />
     <EntityDeploy Include="Models\DB.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>DB.Designer.cs</LastGenOutput>
@@ -449,7 +455,7 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\AlarmInfo\List.cshtml" />
     <Content Include="Views\AlarmInfo\HistoryList.cshtml" />
-    <Content Include="Views\AlarmInfo\FrequencyList.cshtml" />
+    <Content Include="Views\AlarmInfo\RateList.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -24,10 +24,12 @@ namespace AlarmManage.Models
         public string tag_discription { get; set; }
         public string tag_name { get; set; }
         public string mes_tag_name { get; set; }
-        public string pv { get; set; }
+        public string PV { get; set; }
         public string HH { get; set; }
         public string LL { get; set; }
         public string PH { get; set; }
         public string PL { get; set; }
+        public Nullable<int> tag_level { get; set; }
+        public string type { get; set; }
     }
 }
