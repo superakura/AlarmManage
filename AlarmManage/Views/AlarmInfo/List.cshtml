@@ -10,7 +10,7 @@
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th colspan="11" class="text-center">报警详细信息</th>
+                        <th colspan="12" class="text-center">报警详细信息</th>
                     </tr>
                     <tr>
                         <th>报警位号</th>
@@ -21,7 +21,8 @@
                         <th>LL</th>
                         <th>PH</th>
                         <th>PL</th>
-                        <th>时间</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
                         <th>中文描述</th>
                         <th>英文描述</th>
                     </tr>
@@ -49,6 +50,7 @@
                     list += "<td>" + valueOfElement.PH + "</td>";
                     list += "<td>" + valueOfElement.PL + "</td>";
                     list += "<td>" + ChangeDateFormat(valueOfElement.AlarmTime) + "</td>";
+                    list += "<td>" + ChangeDateFormat(valueOfElement.AlarmTimeEnd) + "</td>";
                     list += "<td>" + valueOfElement.TagDiscriptionCN + "</td>";
                     list += "<td>" + valueOfElement.TagDiscriptionEN + "</td>";
                     list += "</tr>";

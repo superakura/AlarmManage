@@ -15,7 +15,7 @@
                         <input type="text" id="tbxTagNameSearch" class="form-control" placeholder="位号">
                     </div>
                     <div class="form-group">
-                        <label for="tbxAlarmTimeBeginSearch">报警时间范围：</label>
+                        <label for="tbxAlarmTimeBeginSearch">报警开始时间范围：</label>
                         <input type="text" class="form-control" id="tbxAlarmTimeBeginSearch" placeholder="报警时间范围开始">--
                         <input type="text" class="form-control" id="tbxAlarmTimeEndSearch" placeholder="报警时间范围结束">
                     </div>
@@ -25,9 +25,9 @@
                     <button type="button" id="btnReset" class="btn bg-navy">
                         <span class="glyphicon glyphicon-repeat"></span> 重置
                     </button>
-                    @*<button type="button" id="btnExcel" class="btn btn-danger">
-                            <span class="glyphicon glyphicon-export"></span> 导出
-                        </button>*@
+                    <button type="button" id="btnExcel" class="btn btn-danger">
+                        <span class="glyphicon glyphicon-export"></span> 导出
+                    </button>
                 </div>
             </div>
         </div>
@@ -37,12 +37,14 @@
 <script>
     laydate.render({
         elem: '#tbxAlarmTimeBeginSearch'
-        , type: 'datetime'
+        , type: 'date'
+        , format: 'yyyy-MM-dd HH:mm:ss' //可任意组合
     });
 
     laydate.render({
         elem: '#tbxAlarmTimeEndSearch'
-        , type: 'datetime'
+        , type: 'date'
+        , format: 'yyyy-MM-dd HH:mm:ss' //可任意组合
     });
 
     var nowDate = new Date();
@@ -200,6 +202,16 @@
         $("#btnReset").click(function () {
             setDateTime();
             $("#bsTableRate").bootstrapTable('refresh');
+        });
+
+        //导出按钮
+        $("#btnExcel").click(function () {
+            var tbxAlarmTimeBeginSearch = $("#tbxAlarmTimeBeginSearch").val();
+            var tbxAlarmTimeEndSearch = $("#tbxAlarmTimeEndSearch").val();
+            var tbxTagNameSearch = $("#tbxTagNameSearch").val();
+            window.location.href = "/AlarmInfo/ToExcelRate?tbxTagNameSearch=" + tbxTagNameSearch
+                + "&tbxAlarmTimeBeginSearch=" + tbxAlarmTimeBeginSearch
+                + "&tbxAlarmTimeEndSearch=" + tbxAlarmTimeEndSearch;
         });
     });
 </script>

@@ -23,6 +23,11 @@ namespace AlarmManage.Models
         public DateTime? AlarmTime { get; set; }
 
         /// <summary>
+        /// 报警时间结束
+        /// </summary>
+        public DateTime? AlarmTimeEnd { get; set; }
+
+        /// <summary>
         /// HH设置值
         /// </summary>
         public string HH { get; set; }
@@ -60,7 +65,7 @@ namespace AlarmManage.Models
         /// <summary>
         /// 报警级别
         /// </summary>
-        public string TagLevel { get; set; }
+        public int? TagLevel { get; set; }
 
         /// <summary>
         /// 设备、工艺

@@ -181,6 +181,7 @@
     <Compile Include="Models\tag_info_view.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\ViewRate.cs" />
     <Compile Include="Models\ViewAlarm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -454,11 +455,13 @@
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\AlarmInfo\List.cshtml" />
-    <Content Include="Views\AlarmInfo\HistoryList.cshtml" />
-    <Content Include="Views\AlarmInfo\RateList.cshtml" />
+    <Content Include="Views\AlarmInfo\ListHistory.cshtml" />
+    <Content Include="Views\AlarmInfo\ListRate.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="ExcelOutPut\" />
+    <Folder Include="Template\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />

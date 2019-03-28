@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>报警信息管理</title>
+    <title>装置报警信息管理（1.0）</title>
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/dashboard.css" rel="stylesheet" />
     <link href="~/dist/bootstrap-table.min.css" rel="stylesheet" />
@@ -23,8 +23,6 @@
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script src="~/dist/bootstrap-table.min.js"></script>
     <script src="~/dist/locale/bootstrap-table-zh-CN.min.js"></script>
-    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
-    <script src="~/Scripts/bootstrap-datetimepicker.zh-CN.js"></script>
     <script src="~/Scripts/toastr.min.js"></script>
     <script src="~/laydate/laydate.js"></script>
     <!--[if lt IE 9]>
@@ -35,12 +33,12 @@
         <div class="container-fluid">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">装置报警信息管理</span>
+                    <span class="sr-only">装置报警信息管理（1.0）</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">装置报警信息管理</a>
+                <a class="navbar-brand" href="#">装置报警信息管理（1.0）</a>
             </div>
         </div>
     </nav>
@@ -49,8 +47,8 @@
             <div class="col-sm-3 col-md-2 sidebar">
                 <ul class="nav nav-sidebar">
                     <li class="active"><a href="/AlarmInfo/List">实时报警信息 <span class="sr-only">(current)</span></a></li>
-                    <li><a href="/AlarmInfo/HistoryList">历史报警信息</a></li>
-                    <li><a href="/AlarmInfo/RateList">报警率计算</a></li>
+                    <li><a href="/AlarmInfo/ListHistory">历史报警信息</a></li>
+                    <li><a href="/AlarmInfo/ListRate">报警率计算</a></li>
                 </ul>
             </div>
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
@@ -88,6 +86,9 @@
         }
 
         function ChangeDateFormat(cellval) {
+            if (cellval === null) {
+                return "";
+            }
             var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
             var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
             var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
