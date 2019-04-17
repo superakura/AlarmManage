@@ -14,6 +14,7 @@ namespace AlarmManage.Models
     
     public partial class alarm_origin_view
     {
+        public Nullable<int> dept_id { get; set; }
         public int id { get; set; }
         public Nullable<int> tag_id { get; set; }
         public string alarm_value { get; set; }

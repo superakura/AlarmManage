@@ -5,7 +5,7 @@
 }
 
 <div class="panel panel-primary">
-    <div class="panel-heading">二套聚丙烯历史报警信息</div>
+    <div class="panel-heading">历史报警信息</div>
     <div class="panel-body">
         <div class="row">
             <div class="col-md-12">
@@ -93,6 +93,7 @@
                 tbxAlarmTimeBeginSearch: $("#tbxAlarmTimeBeginSearch").val(),//报警时间范围开始
                 tbxAlarmTimeEndSearch: $("#tbxAlarmTimeEndSearch").val(),//报警时间范围结束
                 ddlTeamSearch: $("#ddlTeamSearch").val(),//班次
+                deptName: $.cookie('deptName'),//装置名称
                 limit: params.limit,   //页面大小
                 offset: params.offset //页码
             };

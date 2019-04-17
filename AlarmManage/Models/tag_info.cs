@@ -19,5 +19,6 @@ namespace AlarmManage.Models
         public string tag_discription { get; set; }
         public Nullable<int> tag_level { get; set; }
         public string type { get; set; }
+        public Nullable<int> dept_id { get; set; }
     }
 }

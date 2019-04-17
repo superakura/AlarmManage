@@ -17,5 +17,6 @@ namespace AlarmManage.Models
         public int mes_id { get; set; }
         public string mes_tag_name { get; set; }
         public string mes_tag1 { get; set; }
+        public Nullable<int> dept_id { get; set; }
     }
 }

@@ -5,7 +5,7 @@
 }
 
 <div class="panel panel-danger">
-    <div class="panel-heading">二套聚丙烯报警率计算</div>
+    <div class="panel-heading">报警率计算</div>
     <div class="panel-body">
         <div class="row">
             <div class="col-md-12">
@@ -25,13 +25,23 @@
                     <button type="button" id="btnReset" class="btn bg-navy">
                         <span class="glyphicon glyphicon-repeat"></span> 重置
                     </button>
-                    <button type="button" id="btnExcel" class="btn btn-danger">
-                        <span class="glyphicon glyphicon-export"></span> 导出
-                    </button>
+                    @*<button type="button" id="btnExcel" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-export"></span> 导出
+                        </button>*@
                 </div>
             </div>
         </div>
-        <table id="bsTableRate"></table>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="toolbar" class="btn-group">
+                    总报警时长（秒）：<label id="lblAlarmTimeAll"></label>
+                    总秒数：<label id="lblTimeAll"></label>
+                    总报警率：<label id="lblRateAll"></label><label>(%)</label>
+                </div>
+                <table id="bsTableRate"></table>
+            </div>
+        </div>
+
     </div>
 </div>
 <script>
@@ -80,6 +90,7 @@
                 tbxTagNameSearch: $("#tbxTagNameSearch").val(),//位号
                 tbxAlarmTimeBeginSearch: $("#tbxAlarmTimeBeginSearch").val(),//报警时间范围开始
                 tbxAlarmTimeEndSearch: $("#tbxAlarmTimeEndSearch").val(),//报警时间范围结束
+                deptName: $.cookie('deptName'),//装置名称
                 limit: params.limit,   //页面大小
                 offset: params.offset //页码
             };
@@ -118,7 +129,7 @@
                 },
                 {
                     field: 'Rate',
-                    title: '报警率',
+                    title: '报警率(%)',
                     formatter: function (value, row, index) {
                         return row.Rate * 100;
                     }
@@ -190,6 +201,7 @@
             }
 
             if (CompareDate(inputTimeStart, inputTimeEnd)) {
+                GetRateAll();
                 $("#bsTableRate").bootstrapTable('refresh');
             }
             else {
@@ -200,7 +212,9 @@
 
         //重置按钮
         $("#btnReset").click(function () {
+            $("#tbxTagNameSearch").val("");
             setDateTime();
+            GetRateAll();
             $("#bsTableRate").bootstrapTable('refresh');
         });
 
@@ -213,6 +227,28 @@
                 + "&tbxAlarmTimeBeginSearch=" + tbxAlarmTimeBeginSearch
                 + "&tbxAlarmTimeEndSearch=" + tbxAlarmTimeEndSearch;
         });
+
+        GetRateAll();
+        //总报警率计算
+        function GetRateAll() {
+            var tbxTagNameSearch = $("#tbxTagNameSearch").val()//位号
+            var tbxAlarmTimeBeginSearch = $("#tbxAlarmTimeBeginSearch").val()//报警时间范围开始
+            var tbxAlarmTimeEndSearch = $("#tbxAlarmTimeEndSearch").val()//报警时间范围结束
+            var deptName = $.cookie('deptName')//装置名称
+            $.post("/AlarmInfo/GetRateAll",
+                {
+                    "tbxTagNameSearch": tbxTagNameSearch,
+                    "tbxAlarmTimeBeginSearch": tbxAlarmTimeBeginSearch,
+                    "tbxAlarmTimeEndSearch": tbxAlarmTimeEndSearch,
+                    "deptName": deptName
+                },
+                function (data, textStatus, jqXHR) {
+                    $("#lblTimeAll").text(data.allCount);
+                    $("#lblAlarmTimeAll").text(data.timeCount);
+                    $("#lblRateAll").text(data.rateAll*100);
+                }
+            );
+        }
     });
 </script>
 

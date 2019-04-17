@@ -5,6 +5,8 @@ using System.Web;
 using System.Web.Mvc;
 using Aspose.Cells;
 using System.Data.Entity;
+using System.Data.SqlClient;
+using System.Data.Entity.SqlServer;
 
 namespace AlarmManage.Controllers
 {
@@ -62,6 +64,26 @@ namespace AlarmManage.Controllers
         }
 
         /// <summary>
+        /// 根据单位名称，返回单位ID
+        /// </summary>
+        /// <param name="deptName"></param>
+        /// <returns></returns>
+        public int GetDeptID(string deptName)
+        {
+            var deptID = 0;
+            switch (deptName)
+            {
+                case "一套聚丙烯":
+                    deptID = 1;
+                    break;
+                case "二套聚丙烯":
+                    deptID = 2;
+                    break;
+            }
+            return deptID;
+        }
+
+        /// <summary>
         /// 实时报警列表
         /// </summary>
         /// <returns></returns>
@@ -70,10 +92,14 @@ namespace AlarmManage.Controllers
         {
             try
             {
+                var deptName = Request.Form["deptName"];
+                var deptID = GetDeptID(deptName);
+                
                 var result = from o in db.alarm_origin_view
-                             where o.alarm_value != "NR"
+                             where o.alarm_value != "NR"&&o.dept_id==deptID
                              select new
                              {
+                                 DeptID=o.dept_id,
                                  AlarmValue = o.alarm_value,
                                  TagName = o.tag_name,
                                  AlarmTime = o.time,
@@ -114,52 +140,22 @@ namespace AlarmManage.Controllers
                 var tbxAlarmTimeBeginSearch = Request.Form["tbxAlarmTimeBeginSearch"];//报警时间范围开始
                 var tbxAlarmTimeEndSearch = Request.Form["tbxAlarmTimeEndSearch"];//报警时间范围结束
                 var ddlTeamSearch = Request.Form["ddlTeamSearch"];//班次
+                var deptName = Request.Form["deptName"];//装置信息
 
-                var result = from o in db.alarm_origin_view
-                             where o.alarm_value != "NR"
-                             select new
-                             {
-                                 AlarmValue = o.alarm_value,
-                                 TagName = o.tag_name,
-                                 AlarmTime = o.time,
-                                 AlarmTimeEnd = o.end_time,
-                                 o.HH,
-                                 o.LL,
-                                 o.PH,
-                                 o.PL,
-                                 o.PV,
-                                 TagLevel = o.tag_level,
-                                 Type = o.type,
-                                 TagDiscriptionEN = o.tag_discription,
-                                 TagDiscriptionCN = o.mes_tag_name
-                             };
-                if (tbxTagNameSearch != string.Empty)
-                {
-                    result = result.Where(w => w.TagName == (tbxTagNameSearch + ".ALRM"));
-                }
-
-                //选择日期范围
-                if (!string.IsNullOrEmpty(tbxAlarmTimeBeginSearch) & !string.IsNullOrEmpty(tbxAlarmTimeEndSearch) & ddlTeamSearch == string.Empty)
-                {
-                    var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
-                    var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-                    result = result.Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateEnd) >= 0);
-                }
+                var result = GetHistoryIQueryable(tbxTagNameSearch,tbxAlarmTimeBeginSearch,tbxAlarmTimeEndSearch,ddlTeamSearch,deptName);
 
                 //选择班组
                 if (ddlTeamSearch != string.Empty)
                 {
+                    //日期范围不能为空
                     if (string.IsNullOrEmpty(tbxAlarmTimeBeginSearch) || string.IsNullOrEmpty(tbxAlarmTimeEndSearch))
                     {
-                        //日期范围不能为空
                         return Json("ErrorDateRange");
                     }
-                    var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
-                    var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-
-                    var listDateRange = new List<Models.ViewAlarm>();
 
                     //获取日期范围列表
+                    var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
+                    var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
                     var dateRange = GetAllDays(dateStart, dateEnd);
 
                     //如果日期范围大于31天，不能查询,返回错误信息。
@@ -167,418 +163,103 @@ namespace AlarmManage.Controllers
                     {
                         return Json("ErrorDateRange");
                     }
-                    switch (ddlTeamSearch)
-                    {
-                        case "一班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
 
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd=s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
+                    var listDateRange = GetHistoryTeamList(dateRange, result, ddlTeamSearch,deptName);
 
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "二班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Thursday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "三班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "四班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "五班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Thursday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmTimeEnd = s.AlarmTimeEnd,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            HH = s.HH,
-                                            LL = s.LL,
-                                            PH = s.PH,
-                                            PL = s.PL,
-                                            PV = s.PV,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                    }
-                    return Json(new { total = listDateRange.Count(), rows = listDateRange.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList() });
+                    return Json(new {
+                        total = listDateRange.Count(),
+                        rows = listDateRange.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
+                    });
                 }
 
-                return Json(new { total = result.Count(), rows = result.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList() });
+                return Json(new {
+                    total = result.Count(),
+                    rows = result.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
+                });
             }
             catch (Exception e)
             {
                 return Json(e.Message);
             }
+        }
+
+        /// <summary>
+        /// 获取历史报警信息方法
+        /// </summary>
+        /// <param name="tagName"></param>
+        /// <param name="alarmTimeBegin"></param>
+        /// <param name="alarmTimeEnd"></param>
+        /// <param name="team"></param>
+        /// <returns></returns>
+        public IQueryable<Models.ViewAlarm> GetHistoryIQueryable(string tagName, string alarmTimeBegin, string alarmTimeEnd,string team,string deptName)
+        {
+            var deptID = GetDeptID(deptName);
+
+            var result = from o in db.alarm_origin_view
+                         where o.alarm_value != "NR"&&o.dept_id==deptID
+                         select new Models.ViewAlarm
+                         {
+                             DeptID = o.dept_id,
+                             AlarmValue = o.alarm_value,
+                             TagName = o.tag_name,
+                             AlarmTime = o.time,
+                             AlarmTimeEnd = o.end_time,
+                             HH = o.HH,
+                             LL = o.LL,
+                             PH = o.PH,
+                             PL = o.PL,
+                             PV = o.PV,
+                             TagLevel = o.tag_level,
+                             Type = o.type,
+                             TagDiscriptionEN = o.tag_discription,
+                             TagDiscriptionCN = o.mes_tag_name
+                         };
+
+            //按位号名称精确查询
+            if (tagName != string.Empty)
+            {
+                result = result.Where(w => w.TagName == (tagName + ".ALRM"));
+            }
+
+            //选择日期范围
+            if (!string.IsNullOrEmpty(alarmTimeBegin) & !string.IsNullOrEmpty(alarmTimeEnd) & team == string.Empty)
+            {
+                var dateStart = Convert.ToDateTime(alarmTimeBegin);
+                var dateEnd = Convert.ToDateTime(alarmTimeEnd);
+                result = result.Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateEnd) >= 0);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 获取按班组查询历史报警信息方法
+        /// </summary>
+        /// <param name="dateRange"></param>
+        /// <param name="result"></param>
+        /// <param name="team"></param>
+        /// <returns></returns>
+        public List<Models.ViewAlarm> GetHistoryTeamList(DateTime[] dateRange, IQueryable<Models.ViewAlarm> result, string team, string deptName)
+        {
+            var listDateRange = new List<Models.ViewAlarm>();
+
+            //获取装置班组排班信息列表
+            var teamTimeList = db.team_time.Where(w => w.TeamName == team && w.DeviceName ==deptName).ToList();
+
+            for (int i = 0; i < dateRange.Length; i++)
+            {
+                foreach (var item in teamTimeList)
+                {
+                    if (dateRange[i].DayOfWeek.ToString() == item.WeekName)
+                    {
+                        var dateStartTime = Convert.ToDateTime(dateRange[i].ToShortDateString() + " " + item.TimeStart);
+                        var dateEndTime = Convert.ToDateTime(dateRange[i].ToShortDateString() + " " + item.TimeEnd);
+                        var listTeam = result.Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateStartTime) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateEndTime) >= 0).ToList();
+                        listDateRange.AddRange(listTeam);
+                    }
+                }
+            }
+            return listDateRange;
         }
 
         /// <summary>
@@ -599,32 +280,9 @@ namespace AlarmManage.Controllers
                 var tbxAlarmTimeBeginSearch = Request.Form["tbxAlarmTimeBeginSearch"];//报警时间范围开始
                 var tbxAlarmTimeEndSearch = Request.Form["tbxAlarmTimeEndSearch"];//报警时间范围结束
                 var ddlTeamSearch = Request.Form["ddlTeamSearch"];//班次
+                var deptName = Request.Form["deptName"];//装置信息
 
-                var result = (from o in db.alarm_origin_view
-                              where o.alarm_value != "NR"
-                              select new
-                              {
-                                  AlarmValue = o.alarm_value,
-                                  TagName = o.tag_name,
-                                  AlarmTime = o.time,
-                                  Type = o.type,
-                                  TagLevel = o.tag_level,
-                                  TagDiscriptionEN = o.tag_discription,
-                                  TagDiscriptionCN = o.mes_tag_name
-                              }).AsQueryable();
-
-                //按位号查询
-                if (tbxTagNameSearch != string.Empty)
-                {
-                    result = result.Where(w => w.TagName == (tbxTagNameSearch + ".ALRM"));
-                }
-                //按报警开始时间范围查询
-                if (!string.IsNullOrEmpty(tbxAlarmTimeBeginSearch) & !string.IsNullOrEmpty(tbxAlarmTimeEndSearch))
-                {
-                    var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
-                    var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-                    result = result.Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateEnd) >= 0);
-                }
+                var result = GetHistoryIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, ddlTeamSearch, deptName);
 
                 //选择班组
                 if (ddlTeamSearch != string.Empty)
@@ -637,7 +295,7 @@ namespace AlarmManage.Controllers
                     var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
                     var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
 
-                    var listDateRange = new List<Models.ViewAlarm>();
+                    //var listDateRange = new List<Models.ViewAlarm>();
 
                     //获取日期范围列表
                     var dateRange = GetAllDays(dateStart, dateEnd);
@@ -647,341 +305,31 @@ namespace AlarmManage.Controllers
                     {
                         return Json("ErrorDateRange");
                     }
-                    switch (ddlTeamSearch)
-                    {
-                        case "一班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
 
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "二班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Thursday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "三班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "四班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Wednesday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Monday" || dateRange[i].DayOfWeek.ToString() == "Saturday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                        case "五班":
-                            for (int i = 0; i < dateRange.Length; i++)
-                            {
-                                if (dateRange[i].DayOfWeek.ToString() == "Friday")
-                                {
-                                    var dateOneStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 00:00:00");
-                                    var dateOneEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-
-                                    var one = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateOneStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateOneEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(one.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Thursday")
-                                {
-                                    var dateTwoStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 08:00:00");
-                                    var dateTwoEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-
-                                    var two = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateTwoStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateTwoEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(two.ToList());
-                                }
-                                if (dateRange[i].DayOfWeek.ToString() == "Tuesday" || dateRange[i].DayOfWeek.ToString() == "Sunday")
-                                {
-                                    var dateThreeStart = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 16:00:00");
-                                    var dateThreeEnd = Convert.ToDateTime(dateRange[i].ToShortDateString() + " 23:59:59");
-
-                                    var three = result
-                                        .Where(w => DbFunctions.DiffSeconds(w.AlarmTime, dateThreeStart) <= 0 && DbFunctions.DiffSeconds(w.AlarmTime, dateThreeEnd) >= 0)
-                                        .Select(s => new Models.ViewAlarm
-                                        {
-                                            TagName = s.TagName,
-                                            AlarmTime = s.AlarmTime,
-                                            AlarmValue = s.AlarmValue,
-                                            Type = s.Type,
-                                            TagLevel = s.TagLevel,
-                                            TagDiscriptionCN = s.TagDiscriptionCN,
-                                            TagDiscriptionEN = s.TagDiscriptionEN
-                                        });
-                                    listDateRange.AddRange(three.ToList());
-                                }
-                            }
-                            break;
-                    }
+                    var listDateRange = GetHistoryTeamList(dateRange, result, ddlTeamSearch, deptName);
 
                     var frequencyTeam = from p in listDateRange
-                                        group p by new { p.TagName, p.AlarmValue, p.TagDiscriptionCN, p.TagDiscriptionEN,p.Type,p.TagLevel } into g
+                                        group p by new { p.TagName, p.AlarmValue, p.TagDiscriptionCN, p.TagDiscriptionEN, p.Type, p.TagLevel } into g
                                         select new
                                         {
                                             AlarmValue = g.Key.AlarmValue,
                                             TagName = g.Key.TagName,
-                                            Type=g.Key.Type,
-                                            TagLevel=g.Key.TagLevel,
+                                            Type = g.Key.Type,
+                                            TagLevel = g.Key.TagLevel,
                                             TagDiscriptionCN = g.Key.TagDiscriptionCN,
                                             TagDiscriptionEN = g.Key.TagDiscriptionEN,
                                             AlarmFrequency = g.Count()
                                         };
 
-                    return Json(new {
+                    return Json(new
+                    {
                         total = frequencyTeam.Count(),
                         rows = frequencyTeam.OrderByDescending(o => o.AlarmFrequency).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
                     });
                 }
 
                 var frequency = from p in result
-                                group p by new { p.TagName, p.AlarmValue, p.TagDiscriptionCN, p.TagDiscriptionEN, p.Type,p.TagLevel } into g
+                                group p by new { p.TagName, p.AlarmValue, p.TagDiscriptionCN, p.TagDiscriptionEN, p.Type, p.TagLevel } into g
                                 select new
                                 {
                                     AlarmValue = g.Key.AlarmValue,
@@ -993,7 +341,8 @@ namespace AlarmManage.Controllers
                                     AlarmFrequency = g.Count()
                                 };
 
-                return Json(new {
+                return Json(new
+                {
                     total = frequency.Count(),
                     rows = frequency.OrderByDescending(o => o.AlarmFrequency).ThenByDescending(t => t.TagName).Skip(offset).Take(limit).ToList()
                 });
@@ -1021,8 +370,95 @@ namespace AlarmManage.Controllers
                 var tbxTagNameSearch = Request.Form["tbxTagNameSearch"];//位号
                 var tbxAlarmTimeBeginSearch = Request.Form["tbxAlarmTimeBeginSearch"];//报警时间范围开始
                 var tbxAlarmTimeEndSearch = Request.Form["tbxAlarmTimeEndSearch"];//报警时间范围结束
+                var deptName = Request.Form["deptName"];//装置信息
 
-                return Json(GetRateJson(offset,limit,tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch));
+                var result = GetRateIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, deptName);
+
+                var count = result.Count();
+
+                //计算所有位号的报警时间总和
+                var timeCount = result.Sum(s => s.TimeFrequency);
+
+                //计算时间范围内的总秒数
+                var secondRange = ExecDateDiff(Convert.ToDateTime(tbxAlarmTimeBeginSearch), Convert.ToDateTime(tbxAlarmTimeEndSearch));
+                var rateAll =timeCount/ (count * secondRange);
+
+                return Json(new
+                {
+                    total = count,
+                    rows = result.OrderByDescending(o => o.Rate).Skip(offset).Take(limit).ToList(),
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 报警率计算方法
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="limit"></param>
+        /// <param name="tagName"></param>
+        /// <param name="tbxAlarmTimeBeginSearch"></param>
+        /// <param name="alarmTimeEnd"></param>
+        /// <returns></returns>
+        public IQueryable<Models.ViewRate> GetRateIQueryable(string tagName, string alarmTimeBegin, string alarmTimeEnd,string deptName)
+        {
+            var dateStart = Convert.ToDateTime(alarmTimeBegin);
+            var dateEnd = Convert.ToDateTime(alarmTimeEnd);
+            var deptID = GetDeptID(deptName);
+
+            //计算时间范围内的总秒数
+            var secondRange = ExecDateDiff(dateStart, dateEnd);
+
+            var frequency = from p in db.alarm_origin_view
+                            where p.alarm_value != "NR" && (DbFunctions.DiffSeconds(p.time, dateStart) <= 0 && DbFunctions.DiffSeconds(p.time, dateEnd) >= 0) && p.dept_id == deptID
+                            group p by new { p.tag_name, p.mes_tag_name, p.tag_discription, p.type, p.tag_level } into g
+                            select new Models.ViewRate
+                            {
+                                TagName = g.Key.tag_name,
+                                Type = g.Key.type,
+                                TagLevel = g.Key.tag_level,
+                                TagDiscriptionCN = g.Key.mes_tag_name,
+                                TagDiscriptionEN = g.Key.tag_discription,
+                                TimeFrequency = g.Sum(s => DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0 ? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)),
+                                Rate = g.Sum(s => DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0 ? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)) / secondRange,
+                                Range = secondRange
+                            };
+            if (tagName != string.Empty)
+            {
+                frequency = frequency.Where(w => w.TagName == (tagName + ".ALRM"));
+            }
+            return frequency;
+        }
+
+        /// <summary>
+        /// 获取总报警率
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResult GetRateAll()
+        {
+            try
+            {
+                var tbxTagNameSearch = Request.Form["tbxTagNameSearch"];//位号
+                var tbxAlarmTimeBeginSearch = Request.Form["tbxAlarmTimeBeginSearch"];//报警时间范围开始
+                var tbxAlarmTimeEndSearch = Request.Form["tbxAlarmTimeEndSearch"];//报警时间范围结束
+                var deptName = Request.Form["deptName"];//装置信息
+
+                var result = GetRateIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, deptName);
+
+                var count = result.Count(c=>c.TimeFrequency>0);
+
+                //计算所有位号的报警时间总和
+                var timeCount = result.Sum(s => s.TimeFrequency);
+
+                //计算时间范围内的总秒数
+                var secondRange = ExecDateDiff(Convert.ToDateTime(tbxAlarmTimeBeginSearch), Convert.ToDateTime(tbxAlarmTimeEndSearch));
+                var rateAll = timeCount / (count * secondRange);
+                return Json(new { rateAll=rateAll, timeCount = timeCount , allCount= count * secondRange });
             }
             catch (Exception ex)
             {
@@ -1033,18 +469,20 @@ namespace AlarmManage.Controllers
         /// <summary>
         /// 导出报警率Excel
         /// </summary>
-        /// <returns></returns>
+        /// <returns></returns> 
         public FileResult ToExcelRate()
         {
             var tbxTagNameSearch = Request.QueryString["tbxTagNameSearch"];//位号
             var tbxAlarmTimeBeginSearch = Request.QueryString["tbxAlarmTimeBeginSearch"];//报警时间范围开始
             var tbxAlarmTimeEndSearch = Request.QueryString["tbxAlarmTimeEndSearch"];//报警时间范围结束
+            var deptName = Request.Form["deptName"];//装置信息
 
-            var result =GetRateJson(0, 0, tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch);
+            var result = GetRateIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, deptName)
+                .OrderByDescending(o => o.Rate).ToList();
 
             var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
             var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-            var filename = "报警率信息"+dateStart.ToString("yyyyMMdd")+"-"+dateEnd.ToString("yyyyMMdd");
+            var filename = "报警率信息" + dateStart.ToString("yyyyMMdd") + "-" + dateEnd.ToString("yyyyMMdd");
 
             string path = System.IO.Path.Combine(Server.MapPath("/"), "Template/ExportRate.xls");
             Workbook workbook = new Workbook();
@@ -1080,7 +518,7 @@ namespace AlarmManage.Controllers
                 cells[row, 2].SetStyle(style1);
                 cells[row, 3].PutValue(info.Range);
                 cells[row, 3].SetStyle(style1);
-                cells[row, 4].PutValue(info.Rate*100);
+                cells[row, 4].PutValue(info.Rate * 100);
                 cells[row, 4].SetStyle(style1);
                 cells[row, 5].PutValue(info.TagDiscriptionCN);
                 cells[row, 5].SetStyle(style1);
@@ -1096,58 +534,6 @@ namespace AlarmManage.Controllers
             }
             workbook.Save(fileToSave, FileFormatType.Excel97To2003);
             return File(fileToSave, "application/vnd.ms-excel", filename + ".xls");
-        }
-
-        /// <summary>
-        /// 报警率计算函数
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <param name="tbxTagNameSearch"></param>
-        /// <param name="tbxAlarmTimeBeginSearch"></param>
-        /// <param name="tbxAlarmTimeEndSearch"></param>
-        /// <returns></returns>
-        public dynamic GetRateJson(int offset,int limit, string tbxTagNameSearch,string tbxAlarmTimeBeginSearch,string tbxAlarmTimeEndSearch)
-        {
-            var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
-            var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-
-            //计算时间范围内的总秒数
-            var secondRange = ExecDateDiff(dateStart, dateEnd);
-
-            var frequency = from p in db.alarm_origin_view
-                            where p.alarm_value != "NR" && DbFunctions.DiffSeconds(p.time, dateStart) <= 0 && DbFunctions.DiffSeconds(p.time, dateEnd) >= 0
-                            group p by new { p.tag_name, p.mes_tag_name, p.tag_discription, p.type, p.tag_level } into g
-                            select new
-                            {
-                                TagName = g.Key.tag_name,
-                                Type = g.Key.type,
-                                TagLevel = g.Key.tag_level,
-                                TagDiscriptionCN = g.Key.mes_tag_name,
-                                TagDiscriptionEN = g.Key.tag_discription,
-                                TimeFrequency = g.Sum(s => DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0 ? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)),
-                                Rate = (g.Sum(s => DbFunctions.DiffSeconds(s.end_time, dateEnd) <= 0 ? DbFunctions.DiffSeconds(s.start_time, dateEnd) : DbFunctions.DiffSeconds(s.start_time, s.end_time)) / secondRange),
-                                Range = secondRange
-                            };
-            if (tbxTagNameSearch != string.Empty)
-            {
-                frequency = frequency.Where(w => w.TagName == (tbxTagNameSearch + ".ALRM"));
-            }
-
-            if (limit!=0)
-            {
-                //返回分页信息
-                return new
-                {
-                    total = frequency.Count(),
-                    rows = frequency.OrderByDescending(o => o.Rate).Skip(offset).Take(limit).ToList()
-                };
-            }
-            else
-            {
-                //返回所有数据
-                return frequency.OrderByDescending(o => o.Rate).ToList();
-            }
         }
     }
 }

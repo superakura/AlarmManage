@@ -4,15 +4,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <div class="panel panel-success">
-    <div class="panel-heading">二套聚丙烯实时报警信息--5秒更新最新15条数据</div>
+    <div class="panel-heading">实时报警信息--5秒更新最新15条数据</div>
     <div class="panel-body">
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th colspan="12" class="text-center">报警详细信息</th>
+                        <th colspan="13" class="text-center">报警详细信息</th>
                     </tr>
                     <tr>
+                        <th>装置</th>
                         <th>报警位号</th>
                         <th>类型</th>
                         <th>报警信息</th>
@@ -37,10 +38,16 @@
     $(function () {
         LoadAlarm();
         function LoadAlarm() {
-            $.post("/AlarmInfo/GetListNow", "", function (result) {
+            var dept = $.cookie('deptName');
+            $.post("/AlarmInfo/GetListNow", { "deptName": dept }, function (result) {
                 var list = "";
                 $.each(result, function (indexInArray, valueOfElement) {
+                    var deptName = "一套聚丙烯";
+                    if (valueOfElement.DeptID==2) {
+                        deptName = "二套聚丙烯";
+                    }
                     list += "<tr>";
+                    list += "<td>" + deptName + "</td>";
                     list += "<td>" + valueOfElement.TagName.substring(0, valueOfElement.TagName.length-5) + "</td>";
                     list += "<td>" + valueOfElement.Type + "</td>";
                     list += "<td>" + valueOfElement.AlarmValue + "</td>";

@@ -29,7 +29,9 @@ namespace AlarmManage.Models
         public virtual DbSet<alarm_origin> alarm_origin { get; set; }
         public virtual DbSet<alarm_pv_value> alarm_pv_value { get; set; }
         public virtual DbSet<mes_tag> mes_tag { get; set; }
+        public virtual DbSet<mes_tag3> mes_tag3 { get; set; }
         public virtual DbSet<tag_info> tag_info { get; set; }
+        public virtual DbSet<team_time> team_time { get; set; }
         public virtual DbSet<alarm_origin_view> alarm_origin_view { get; set; }
         public virtual DbSet<alarm_pv_info_view> alarm_pv_info_view { get; set; }
         public virtual DbSet<tag_info_view> tag_info_view { get; set; }

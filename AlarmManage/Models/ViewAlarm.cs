@@ -71,5 +71,10 @@ namespace AlarmManage.Models
         /// 设备、工艺
         /// </summary>
         public string Type { get; set; }
+
+        /// <summary>
+        /// 装置信息
+        /// </summary>
+        public int? DeptID { get; set; }
     }
 }

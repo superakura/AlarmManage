@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>装置报警信息管理（1.0）</title>
+    <title>装置报警信息管理（1.1）</title>
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/dashboard.css" rel="stylesheet" />
     <link href="~/dist/bootstrap-table.min.css" rel="stylesheet" />
@@ -20,6 +20,7 @@
 </head>
 <body>
     <script src="~/Scripts/jquery-1.11.3.min.js"></script>
+    <script src="~/Scripts/jquery.cookie.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script src="~/dist/bootstrap-table.min.js"></script>
     <script src="~/dist/locale/bootstrap-table-zh-CN.min.js"></script>
@@ -33,23 +34,31 @@
         <div class="container-fluid">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">装置报警信息管理（1.0）</span>
+                    <span class="sr-only">装置报警信息管理（1.1）</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">装置报警信息管理（1.0）</a>
+                <a class="navbar-brand" href="#">装置报警信息管理（1.1）</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-left">
+                    <li class="active"><a href="/AlarmInfo/List">实时报警信息 <span class="sr-only">(current)</span></a></li>
+                    <li><a href="/AlarmInfo/ListHistory">历史报警信息</a></li>
+                    <li><a href="/AlarmInfo/ListRate">报警率计算</a></li>
+                </ul>
             </div>
         </div>
     </nav>
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-3 col-md-2 sidebar">
+                当前装置：【<label class="text-danger" id="lblDeptInfo"></label>】
                 <ul class="nav nav-sidebar">
-                    <li class="active"><a href="/AlarmInfo/List">实时报警信息 <span class="sr-only">(current)</span></a></li>
-                    <li><a href="/AlarmInfo/ListHistory">历史报警信息</a></li>
-                    <li><a href="/AlarmInfo/ListRate">报警率计算</a></li>
+                    <li><a href="javascript:void(0)" id="Dept1" class="DeptInfo">一套聚丙烯</a></li>
+                    <li><a href="javascript:void(0)" id="Dept2" class="DeptInfo">二套聚丙烯</a></li>
                 </ul>
+
             </div>
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                 <div class="table-responsive">
@@ -101,6 +110,21 @@
         var string = document.location.pathname;
         var url = string.split("/");
         $('a[href="' + "/" + url[1] + "/" + url[2] + '"]').parent().addClass('active').siblings().removeClass('active');
+
+        //设置初始装置
+        if ($.cookie('deptName') === undefined) {
+            $.cookie('deptName', '一套聚丙烯');
+        }
+
+        $(function () {
+            //设置当前装置显示值
+            $("#lblDeptInfo").text($.cookie('deptName'));
+
+            $(".DeptInfo").click(function () {
+                $.cookie('deptName', $(this).text());
+                window.location.reload();
+            });
+        });
     </script>
 </body>
 </html>

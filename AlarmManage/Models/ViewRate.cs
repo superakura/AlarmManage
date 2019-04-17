@@ -45,6 +45,6 @@ namespace AlarmManage.Models
         /// <summary>
         /// 时间范围秒数
         /// </summary>
-        public int Range { get; set; }
+        public double Range { get; set; }
     }
 }

@@ -12,14 +12,10 @@ namespace AlarmManage.Models
     using System;
     using System.Collections.Generic;
     
-    public partial class tag_info_view
+    public partial class mes_tag3
     {
-        public int id { get; set; }
-        public string tag_name { get; set; }
-        public string tag_discription { get; set; }
-        public Nullable<int> tag_level { get; set; }
-        public string type { get; set; }
-        public Nullable<int> dept_id { get; set; }
+        public int mes_id { get; set; }
         public string mes_tag_name { get; set; }
+        public string mes_tag { get; set; }
     }
 }
