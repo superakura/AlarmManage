@@ -96,7 +96,8 @@ namespace AlarmManage.Controllers
                 var deptID = GetDeptID(deptName);
                 
                 var result = from o in db.alarm_origin_view
-                             where o.alarm_value != "NR"&&o.dept_id==deptID
+                                 //where o.alarm_value != "NR"&&o.dept_id==deptID
+                             where (new string[] { "LL", "HH", "LO", "HI" }).Contains(o.alarm_value) && o.dept_id == deptID
                              select new
                              {
                                  DeptID=o.dept_id,
@@ -196,7 +197,7 @@ namespace AlarmManage.Controllers
             var deptID = GetDeptID(deptName);
 
             var result = from o in db.alarm_origin_view
-                         where o.alarm_value != "NR"&&o.dept_id==deptID
+                         where (new string[] { "LL", "HH", "LO", "HI" }).Contains(o.alarm_value) && o.dept_id==deptID
                          select new Models.ViewAlarm
                          {
                              DeptID = o.dept_id,
@@ -414,7 +415,7 @@ namespace AlarmManage.Controllers
             var secondRange = ExecDateDiff(dateStart, dateEnd);
 
             var frequency = from p in db.alarm_origin_view
-                            where p.alarm_value != "NR" && (DbFunctions.DiffSeconds(p.time, dateStart) <= 0 && DbFunctions.DiffSeconds(p.time, dateEnd) >= 0) && p.dept_id == deptID
+                            where (new string[] { "LL", "HH", "LO", "HI" }).Contains(p.alarm_value) && (DbFunctions.DiffSeconds(p.time, dateStart) <= 0 && DbFunctions.DiffSeconds(p.time, dateEnd) >= 0) && p.dept_id == deptID
                             group p by new { p.tag_name, p.mes_tag_name, p.tag_discription, p.type, p.tag_level } into g
                             select new Models.ViewRate
                             {
@@ -475,14 +476,14 @@ namespace AlarmManage.Controllers
             var tbxTagNameSearch = Request.QueryString["tbxTagNameSearch"];//位号
             var tbxAlarmTimeBeginSearch = Request.QueryString["tbxAlarmTimeBeginSearch"];//报警时间范围开始
             var tbxAlarmTimeEndSearch = Request.QueryString["tbxAlarmTimeEndSearch"];//报警时间范围结束
-            var deptName = Request.Form["deptName"];//装置信息
+            var deptName = Request.QueryString["deptName"];//装置信息
 
             var result = GetRateIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, deptName)
                 .OrderByDescending(o => o.Rate).ToList();
 
             var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
             var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
-            var filename = "报警率信息" + dateStart.ToString("yyyyMMdd") + "-" + dateEnd.ToString("yyyyMMdd");
+            var filename = deptName+"-报警率信息" + dateStart.ToString("yyyyMMdd") + "-" + dateEnd.ToString("yyyyMMdd");
 
             string path = System.IO.Path.Combine(Server.MapPath("/"), "Template/ExportRate.xls");
             Workbook workbook = new Workbook();
@@ -534,6 +535,114 @@ namespace AlarmManage.Controllers
             }
             workbook.Save(fileToSave, FileFormatType.Excel97To2003);
             return File(fileToSave, "application/vnd.ms-excel", filename + ".xls");
+        }
+
+        /// <summary>
+        /// 导出报警历史信息Excel
+        /// </summary>
+        /// <returns></returns>
+        public FileResult ToExcelHistory()
+        {
+            var tbxTagNameSearch = Request.QueryString["tbxTagNameSearch"];//位号
+            var tbxAlarmTimeBeginSearch = Request.QueryString["tbxAlarmTimeBeginSearch"];//报警时间范围开始
+            var tbxAlarmTimeEndSearch = Request.QueryString["tbxAlarmTimeEndSearch"];//报警时间范围结束
+            var deptName = Request.QueryString["deptName"];//装置信息
+            var ddlTeamSearch = Request.QueryString["ddlTeamSearch"];//班组信息
+
+            var resultQueryable = GetHistoryIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, ddlTeamSearch, deptName);
+
+            var excelHistory = new List<Models.ViewAlarm>();
+
+            //选择班组
+            if (ddlTeamSearch != string.Empty)
+            {
+                //获取日期范围列表
+                var dateRange = GetAllDays(Convert.ToDateTime(tbxAlarmTimeBeginSearch), Convert.ToDateTime(tbxAlarmTimeEndSearch));
+                excelHistory = GetHistoryTeamList(dateRange, resultQueryable, ddlTeamSearch, deptName);
+            }
+            else
+            {
+                excelHistory = resultQueryable.ToList();
+            }
+
+            var frequencyTeam = from p in excelHistory
+                                group p by new { p.TagName, p.AlarmValue, p.TagDiscriptionCN, p.TagDiscriptionEN, p.Type, p.TagLevel } into g
+                                select new
+                                {
+                                    AlarmValue = g.Key.AlarmValue,
+                                    TagName = g.Key.TagName,
+                                    Type = g.Key.Type,
+                                    TagLevel = g.Key.TagLevel,
+                                    TagDiscriptionCN = g.Key.TagDiscriptionCN,
+                                    TagDiscriptionEN = g.Key.TagDiscriptionEN,
+                                    AlarmFrequency = g.Count()
+                                };
+
+            var dateStart = Convert.ToDateTime(tbxAlarmTimeBeginSearch);
+            var dateEnd = Convert.ToDateTime(tbxAlarmTimeEndSearch);
+            var filename = deptName+ "-报警历史信息" + dateStart.ToString("yyyyMMdd") + "-" + dateEnd.ToString("yyyyMMdd");
+
+            string path = System.IO.Path.Combine(Server.MapPath("/"), "Template/ExportHistory.xls");
+            Workbook workbook = new Workbook();
+            workbook.Open(path);
+            Cells cells0 = workbook.Worksheets[0].Cells;
+            Cells cells1 = workbook.Worksheets[1].Cells;
+
+            var styleExcel = GetAsposeStyle(workbook);//表格样式
+
+            var rowCells0 = 1;
+            foreach (var info in excelHistory)
+            {
+                cells0[rowCells0, 0].PutValue(info.TagName.Substring(0, (info.TagName).Length - 5));
+                cells0[rowCells0, 0].SetStyle(styleExcel);
+                cells0[rowCells0, 1].PutValue(info.Type);
+                cells0[rowCells0, 1].SetStyle(styleExcel);
+                cells0[rowCells0, 2].PutValue(info.AlarmValue);
+                cells0[rowCells0, 2].SetStyle(styleExcel);
+                cells0[rowCells0, 3].PutValue(info.PV);
+                cells0[rowCells0, 3].SetStyle(styleExcel);
+                rowCells0++;
+            }
+
+            var rowCells1 = 1;
+            foreach (var info in frequencyTeam)
+            {
+                cells1[rowCells1, 0].PutValue(info.TagName.Substring(0, (info.TagName).Length - 5));
+                cells1[rowCells1, 0].SetStyle(styleExcel);
+                cells1[rowCells1, 1].PutValue(info.Type);
+                cells1[rowCells1, 1].SetStyle(styleExcel);
+                cells1[rowCells1, 2].PutValue(info.AlarmValue);
+                cells1[rowCells1, 2].SetStyle(styleExcel);
+                cells1[rowCells1, 3].PutValue(info.AlarmFrequency);
+                cells1[rowCells1, 3].SetStyle(styleExcel);
+                rowCells1++;
+            }
+
+            string fileToSave = System.IO.Path.Combine(Server.MapPath("/"), "ExcelOutPut/" + filename + ".xls");
+            if (System.IO.File.Exists(fileToSave))
+            {
+                System.IO.File.Delete(fileToSave);
+            }
+            workbook.Save(fileToSave, FileFormatType.Excel97To2003);
+            return File(fileToSave, "application/vnd.ms-excel", filename + ".xls");
+        }
+
+        /// <summary>
+        /// 设置Aspose Excel表格样式
+        /// </summary>
+        /// <param name="workbook"></param>
+        /// <returns></returns>
+        public Style GetAsposeStyle(Workbook workbook)
+        {
+            Style style1 = workbook.Styles[workbook.Styles.Add()];//新增样式  
+            style1.HorizontalAlignment = TextAlignmentType.Center;//文字居中 
+            style1.VerticalAlignment = TextAlignmentType.Center;
+            style1.IsTextWrapped = true;//单元格内容自动换行  
+            style1.Borders[BorderType.LeftBorder].LineStyle = CellBorderType.Thin; //应用边界线 左边界线  
+            style1.Borders[BorderType.RightBorder].LineStyle = CellBorderType.Thin; //应用边界线 右边界线  
+            style1.Borders[BorderType.TopBorder].LineStyle = CellBorderType.Thin; //应用边界线 上边界线  
+            style1.Borders[BorderType.BottomBorder].LineStyle = CellBorderType.Thin; //应用边界线 下边界线  
+            return style1;
         }
     }
 }

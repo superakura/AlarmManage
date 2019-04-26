@@ -25,9 +25,9 @@
                     <button type="button" id="btnReset" class="btn bg-navy">
                         <span class="glyphicon glyphicon-repeat"></span> 重置
                     </button>
-                    @*<button type="button" id="btnExcel" class="btn btn-danger">
-                            <span class="glyphicon glyphicon-export"></span> 导出
-                        </button>*@
+                    <button type="button" id="btnExcel" class="btn btn-danger">
+                        <span class="glyphicon glyphicon-export"></span> 导出
+                    </button>
                 </div>
             </div>
         </div>
@@ -58,6 +58,7 @@
     });
 
     var nowDate = new Date();
+    var endDate = new Date(nowDate.getTime() - 1 * 24 * 60 * 60 * 1000); //前1天
     var pre7Date = new Date(nowDate.getTime() - 7 * 24 * 60 * 60 * 1000); //前7天
 
     //获取当前时间，格式YYYY-MM-DD
@@ -81,7 +82,7 @@
     setDateTime();
     function setDateTime() {
         $("#tbxAlarmTimeBeginSearch").val(getNowFormatDate(pre7Date) + " 00:00:00");
-        $("#tbxAlarmTimeEndSearch").val(getNowFormatDate(nowDate) + " 23:59:59");
+        $("#tbxAlarmTimeEndSearch").val(getNowFormatDate(endDate) + " 23:59:59");
     }
 
     $(function () {
@@ -223,7 +224,9 @@
             var tbxAlarmTimeBeginSearch = $("#tbxAlarmTimeBeginSearch").val();
             var tbxAlarmTimeEndSearch = $("#tbxAlarmTimeEndSearch").val();
             var tbxTagNameSearch = $("#tbxTagNameSearch").val();
+            var deptName = $.cookie('deptName');
             window.location.href = "/AlarmInfo/ToExcelRate?tbxTagNameSearch=" + tbxTagNameSearch
+                + "&deptName=" + deptName
                 + "&tbxAlarmTimeBeginSearch=" + tbxAlarmTimeBeginSearch
                 + "&tbxAlarmTimeEndSearch=" + tbxAlarmTimeEndSearch;
         });
@@ -245,7 +248,7 @@
                 function (data, textStatus, jqXHR) {
                     $("#lblTimeAll").text(data.allCount);
                     $("#lblAlarmTimeAll").text(data.timeCount);
-                    $("#lblRateAll").text(data.rateAll*100);
+                    $("#lblRateAll").text(data.rateAll * 100);
                 }
             );
         }
