@@ -175,9 +175,6 @@
     <Compile Include="Models\mes_tag.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\mes_tag3.cs">
-      <DependentUpon>DB.tt</DependentUpon>
-    </Compile>
     <Compile Include="Models\tag_info.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>

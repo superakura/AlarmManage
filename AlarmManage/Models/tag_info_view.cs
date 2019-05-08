@@ -21,5 +21,6 @@ namespace AlarmManage.Models
         public string type { get; set; }
         public Nullable<int> dept_id { get; set; }
         public string mes_tag_name { get; set; }
+        public string mes_type { get; set; }
     }
 }

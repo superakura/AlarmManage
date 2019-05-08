@@ -37,6 +37,14 @@
                     总报警时长（秒）：<label id="lblAlarmTimeAll"></label>
                     总秒数：<label id="lblTimeAll"></label>
                     总报警率：<label id="lblRateAll"></label><label>(%)</label>
+                    <br />
+                    A级报警率：<label id="lblRateA"></label><label>(%)</label>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    B级报警率：<label id="lblRateB"></label><label>(%)</label>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    C级报警率：<label id="lblRateC"></label><label>(%)</label>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    D级报警率：<label id="lblRateD"></label><label>(%)</label>
                 </div>
                 <table id="bsTableRate"></table>
             </div>
@@ -249,6 +257,10 @@
                     $("#lblTimeAll").text(data.allCount);
                     $("#lblAlarmTimeAll").text(data.timeCount);
                     $("#lblRateAll").text(data.rateAll * 100);
+                    $("#lblRateA").text(data.rateA * 100);
+                    $("#lblRateB").text(data.rateB * 100);
+                    $("#lblRateC").text(data.rateC * 100);
+                    $("#lblRateD").text(data.rateD * 100);
                 }
             );
         }

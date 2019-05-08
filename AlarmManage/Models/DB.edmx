@@ -48,14 +48,7 @@
           <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
           <Property Name="mes_tag" Type="nvarchar" MaxLength="255" />
           <Property Name="dept_id" Type="int" />
-        </EntityType>
-        <EntityType Name="mes_tag3">
-          <Key>
-            <PropertyRef Name="mes_id" />
-          </Key>
-          <Property Name="mes_id" Type="int" Nullable="false" />
-          <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
-          <Property Name="mes_tag" Type="nvarchar" MaxLength="255" />
+          <Property Name="type" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="tag_info">
           <Key>
@@ -102,7 +95,7 @@
           <Property Name="PH" Type="nvarchar" MaxLength="50" />
           <Property Name="PL" Type="nvarchar" MaxLength="50" />
           <Property Name="tag_level" Type="int" />
-          <Property Name="type" Type="nvarchar" MaxLength="200" />
+          <Property Name="type" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <!--生成过程中发现错误:
 警告 6002: 表/视图“alarm_manage_system.dbo.alarm_pv_info_view”未定义主键。已推断出该键，并将定义创建为只读的表/视图。-->
@@ -139,13 +132,13 @@
           <Property Name="type" Type="nvarchar" MaxLength="200" />
           <Property Name="dept_id" Type="int" />
           <Property Name="mes_tag_name" Type="nvarchar" MaxLength="255" />
+          <Property Name="mes_type" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <EntityContainer Name="alarm_manage_systemModelStoreContainer">
           <EntitySet Name="alarm_info" EntityType="Self.alarm_info" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="alarm_pv_value" EntityType="Self.alarm_pv_value" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="mes_tag" EntityType="Self.mes_tag" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="mes_tag3" EntityType="Self.mes_tag3" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="tag_info" EntityType="Self.tag_info" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="team_time" EntityType="Self.team_time" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="alarm_origin_view" EntityType="Self.alarm_origin_view" store:Type="Views" store:Schema="dbo">
@@ -197,7 +190,8 @@
     [tag_info_view].[tag_level] AS [tag_level], 
     [tag_info_view].[type] AS [type], 
     [tag_info_view].[dept_id] AS [dept_id], 
-    [tag_info_view].[mes_tag_name] AS [mes_tag_name]
+    [tag_info_view].[mes_tag_name] AS [mes_tag_name], 
+    [tag_info_view].[mes_type] AS [mes_type]
     FROM [dbo].[tag_info_view] AS [tag_info_view]</DefiningQuery>
           </EntitySet>
         </EntityContainer>
@@ -249,14 +243,7 @@
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
           <Property Name="mes_tag1" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
           <Property Name="dept_id" Type="Int32" />
-        </EntityType>
-        <EntityType Name="mes_tag3">
-          <Key>
-            <PropertyRef Name="mes_id" />
-          </Key>
-          <Property Name="mes_id" Type="Int32" Nullable="false" />
-          <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
-          <Property Name="mes_tag" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="tag_info">
           <Key>
@@ -301,7 +288,7 @@
           <Property Name="PH" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PL" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="tag_level" Type="Int32" />
-          <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="alarm_pv_info_view">
           <Key>
@@ -334,13 +321,13 @@
           <Property Name="type" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
           <Property Name="dept_id" Type="Int32" />
           <Property Name="mes_tag_name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="mes_type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityContainer Name="alarm_manage_systemEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="alarm_info" EntityType="Self.alarm_info" />
           <EntitySet Name="alarm_origin" EntityType="Self.alarm_origin" />
           <EntitySet Name="alarm_pv_value" EntityType="Self.alarm_pv_value" />
           <EntitySet Name="mes_tag" EntityType="Self.mes_tag" />
-          <EntitySet Name="mes_tag3" EntityType="Self.mes_tag3" />
           <EntitySet Name="tag_info" EntityType="Self.tag_info" />
           <EntitySet Name="team_time" EntityType="Self.team_time" />
           <EntitySet Name="alarm_origin_view" EntityType="Self.alarm_origin_view" />
@@ -398,15 +385,7 @@
                 <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
                 <ScalarProperty Name="mes_tag1" ColumnName="mes_tag" />
                 <ScalarProperty Name="dept_id" ColumnName="dept_id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="mes_tag3">
-            <EntityTypeMapping TypeName="alarm_manage_systemModel.mes_tag3">
-              <MappingFragment StoreEntitySet="mes_tag3">
-                <ScalarProperty Name="mes_id" ColumnName="mes_id" />
-                <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
-                <ScalarProperty Name="mes_tag" ColumnName="mes_tag" />
+                <ScalarProperty Name="type" ColumnName="type" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -489,6 +468,7 @@
                 <ScalarProperty Name="type" ColumnName="type" />
                 <ScalarProperty Name="dept_id" ColumnName="dept_id" />
                 <ScalarProperty Name="mes_tag_name" ColumnName="mes_tag_name" />
+                <ScalarProperty Name="mes_type" ColumnName="mes_type" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

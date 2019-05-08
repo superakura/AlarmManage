@@ -169,13 +169,13 @@ namespace AlarmManage.Controllers
 
                     return Json(new {
                         total = listDateRange.Count(),
-                        rows = listDateRange.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
+                        rows = listDateRange.OrderBy(o => o.Type).ThenByDescending(t => t.AlarmTime).Skip(offset).Take(limit).ToList()
                     });
                 }
 
                 return Json(new {
                     total = result.Count(),
-                    rows = result.OrderByDescending(o => o.AlarmTime).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
+                    rows = result.OrderBy(o => o.Type).ThenByDescending(t => t.AlarmTime).Skip(offset).Take(limit).ToList()
                 });
             }
             catch (Exception e)
@@ -325,7 +325,7 @@ namespace AlarmManage.Controllers
                     return Json(new
                     {
                         total = frequencyTeam.Count(),
-                        rows = frequencyTeam.OrderByDescending(o => o.AlarmFrequency).ThenBy(t => t.TagName).Skip(offset).Take(limit).ToList()
+                        rows = frequencyTeam.OrderBy(o => o.Type).ThenByDescending(t => t.AlarmFrequency).Skip(offset).Take(limit).ToList()
                     });
                 }
 
@@ -345,7 +345,7 @@ namespace AlarmManage.Controllers
                 return Json(new
                 {
                     total = frequency.Count(),
-                    rows = frequency.OrderByDescending(o => o.AlarmFrequency).ThenByDescending(t => t.TagName).Skip(offset).Take(limit).ToList()
+                    rows = frequency.OrderBy(o => o.Type).ThenByDescending(t => t.AlarmFrequency).Skip(offset).Take(limit).ToList()
                 });
             }
             catch (Exception e)
@@ -387,7 +387,7 @@ namespace AlarmManage.Controllers
                 return Json(new
                 {
                     total = count,
-                    rows = result.OrderByDescending(o => o.Rate).Skip(offset).Take(limit).ToList(),
+                    rows = result.OrderBy(o => o.Type).ThenByDescending(t =>t.Rate).Skip(offset).Take(limit).ToList(),
                 });
             }
             catch (Exception ex)
@@ -451,7 +451,8 @@ namespace AlarmManage.Controllers
 
                 var result = GetRateIQueryable(tbxTagNameSearch, tbxAlarmTimeBeginSearch, tbxAlarmTimeEndSearch, deptName);
 
-                var count = result.Count(c=>c.TimeFrequency>0);
+                var deptID = GetDeptID(deptName);
+                var count = db.mes_tag.Where(w => w.dept_id == deptID).Count();
 
                 //计算所有位号的报警时间总和
                 var timeCount = result.Sum(s => s.TimeFrequency);
@@ -459,7 +460,32 @@ namespace AlarmManage.Controllers
                 //计算时间范围内的总秒数
                 var secondRange = ExecDateDiff(Convert.ToDateTime(tbxAlarmTimeBeginSearch), Convert.ToDateTime(tbxAlarmTimeEndSearch));
                 var rateAll = timeCount / (count * secondRange);
-                return Json(new { rateAll=rateAll, timeCount = timeCount , allCount= count * secondRange });
+
+                var countA= db.mes_tag.Where(w => w.dept_id == deptID&&w.type=="A").Count();
+                var timeCountA = result.Where(w=>w.Type=="A").Sum(s => s.TimeFrequency);
+                var rateA = timeCountA / (countA * secondRange);
+
+                var countB = db.mes_tag.Where(w => w.dept_id == deptID && w.type == "B").Count();
+                var timeCountB = result.Where(w => w.Type == "B").Sum(s => s.TimeFrequency);
+                var rateB = timeCountB / (countB * secondRange);
+
+                var countC = db.mes_tag.Where(w => w.dept_id == deptID && w.type == "C").Count();
+                var timeCountC = result.Where(w => w.Type == "C").Sum(s => s.TimeFrequency);
+                var rateC = timeCountC / (countC * secondRange);
+
+                var countD = db.mes_tag.Where(w => w.dept_id == deptID && w.type == "D").Count();
+                var timeDountD = result.Where(w => w.Type == "D").Sum(s => s.TimeFrequency);
+                var rateD = timeDountD / (countD * secondRange);
+
+                return Json(new {
+                    rateAll =rateAll,
+                    timeCount = timeCount ,
+                    allCount = count * secondRange,
+                    rateA =rateA,
+                    rateB =rateB,
+                    rateC =rateC,
+                    rateD = rateD
+                });
             }
             catch (Exception ex)
             {
